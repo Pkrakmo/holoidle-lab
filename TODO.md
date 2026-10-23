@@ -4,8 +4,10 @@
 - [ ] Find strong card combinations for each tier.
 - [x] Find the best combination using cards owned in the imported save.
 - [x] Make owned-layout search respect unlocked collaboration slots and available card tiers.
-- [ ] Let owned-layout search prioritize a selected asset.
+- [x] Let owned-layout search prioritize a selected asset.
 - [x] Prioritize the highest-IpS unlocked asset in "Find best layout" and account for its Holoscope bonuses.
+- [x] Calculate imported board card and affection bonuses in the asset dashboard and owned-layout search from one game-matched IpS formula.
+- [ ] Model temporary Daily Mission and Overdrive multipliers when enough live-state data is available in the save.
 - [x] Add Holoscope bonuses to card board calculations.
 - [x] Add a separate Holoscope view.
 - [x] Share card combinations using a text string.

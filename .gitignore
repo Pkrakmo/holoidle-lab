@@ -6,6 +6,7 @@ npm-debug.log*
 
 # Research
 docs/*
+docs/research/*
 agent.md
 
 # Local environment and editor files
@@ -18,3 +19,4 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
