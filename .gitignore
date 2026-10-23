@@ -1,0 +1,20 @@
+# Node and Vite generated files
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# Research
+docs/*
+agent.md
+
+# Local environment and editor files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~

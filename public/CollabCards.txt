@@ -1,0 +1,113 @@
+ID,Name,CollabGroup1,CollabGroup2,CollabGroup3,Tier,Direction,PrimaryAsset1,PrimaryAsset2,PrimaryAsset3,SecondaryAsset,EquipOperation,Value,Conditional,ConditionalGroup1,ConditionalGroup2,ConditionalGroup3,ConditionalOperation,ConditionalValue
+0,AO-Chan,Equipment,Myth,Ina,1,Bottom,None,None,None,None,Multiply,3,TRUE,Myth,Ina,None,Multiply,5
+1,Baerats,Council,Baelz,None,1,Top,None,None,None,None,Add,15,TRUE,Council,None,None,Multiply,4
+2,Bloop,Myth,Gura,None,1,Right,None,None,None,None,Add,10,TRUE,Gura,None,None,Multiply,3
+3,Boros,Council,Kronii,None,1,DiagonalBottomLeft,None,None,None,None,Add,10,TRUE,Kronii,None,None,Multiply,15
+4,Boxing Gloves,Equipment,Gamers,Korone,1,None,Talent Academy,None,None,None,Add,10,FALSE,None,None,None,Add,0
+5,Bubba,Myth,Amelia,None,1,Left,None,None,None,None,Add,10,TRUE,Myth,Amelia,None,Add,45
+6,Crow,Talent,None,None,1,Bottom,None,None,None,None,Multiply,4,TRUE,Talent,None,None,Multiply,8
+7,Danin,Fantasy,None,None,1,None,Themed Cafe,Idol Shrine,None,None,Add,5,FALSE,None,None,None,Add,0
+8,Deadbeat,Myth,Calli,None,1,None,Concert Venue,Karaoke Bar,None,None,Add,10,FALSE,None,None,None,Add,0
+9,Death-Sensei,Myth,Calli,None,1,None,Karaoke Bar,None,None,Artist,Add,10,FALSE,None,None,None,Add,0
+10,Elfriend,Fantasy,None,None,1,Top,None,None,None,None,Multiply,2,TRUE,Fantasy,None,None,Multiply,5
+11,Friend,Council,None,None,1,None,Prime Fan,None,None,None,Add,10,FALSE,None,None,None,Add,0
+12,Haachama's Cooking,Equipment,Talent,None,1,None,Chain Restaurant,Luxury Resort,None,None,Add,15,FALSE,None,None,None,Add,0
+13,Horny Jailer,Equipment,None,None,1,DiagonalBottomLeft,None,None,None,None,Multiply,5,TRUE,Kiara,None,None,Multiply,15
+14,Hosoinu,Gamers,Korone,None,1,DiagonalTopLeft,None,None,None,None,Add,15,TRUE,Gamers,None,None,Multiply,4
+15,Lantern,Equipment,Council,None,1,None,Idol Shrine,Idol Temple,None,None,Add,10,FALSE,None,None,None,Add,0
+16,Listener-san,Gamers,Korone,None,1,DiagonalTopRight,None,None,None,None,Multiply,2,TRUE,Gamers,None,None,Multiply,6
+17,Miofa,Gamers,None,None,1,None,Idol Shrine,Themed Cafe,Theme Park,None,Add,10,FALSE,None,None,None,Add,0
+18,Nekko,Talent,None,None,1,None,Prime Fan,Talent Academy,None,None,Add,10,FALSE,None,None,None,Add,0
+19,Nemu,Council,None,None,1,DiagonalTopRight,None,None,None,None,Add,5,TRUE,Council,None,None,Add,20
+20,Nousagi,Fantasy,None,None,1,None,Prime Fan,None,None,None,Add,10,FALSE,None,None,None,Add,0
+21,Onigiryaa,Gamers,None,None,1,Left,None,None,None,None,Multiply,3,FALSE,None,None,None,Add,0
+22,Pebble,Talent,Bijou,None,1,None,Governamental Ministry,Multiverse Device,Space Colony,None,Add,5,FALSE,None,None,None,Add,0
+23,Phoenix,Myth,Kiara,None,1,None,Chain Restaurant,None,None,None,Add,20,FALSE,None,None,None,Add,0
+24,Plug Type Asacoco,Equipment,Talent,None,1,DiagonalBottomLeft,None,None,None,None,Multiply,4,TRUE,Equipment,None,None,Multiply,7
+25,Poyoyo,Talent,None,None,1,None,Holo Museum,Theme Park,None,None,Add,10,FALSE,None,None,None,Add,0
+26,Scythe,Equipment,Myth,Calli,1,Left,None,None,None,None,Add,10,TRUE,Calli,Myth,Equipment,Multiply,2
+27,Shield,Myth,Kiara,Equipment,1,Left,None,None,None,None,Add,10,TRUE,Kiara,Myth,Equipment,Multiply,5
+28,Shrimp,Myth,Gura,None,1,Top,None,None,None,None,Add,10,TRUE,Gura,None,None,Add,100
+29,Dokuro-kun,Fantasy,Marine,None,1,None,Gacha Casino,Idol Shrine,None,None,Add,10,FALSE,None,None,None,Add,0
+30,SSRB,Talent,None,None,1,Right,None,None,None,None,Add,10,TRUE,Talent,Gamers,None,Add,30
+31,Subarudo,Equipment,Talent,None,1,None,Luxury Resort,None,None,Chain Restaurant,Add,10,FALSE,None,None,None,Add,0
+32,Sukonbu,Gamers,None,None,1,None,Prime Fan,None,None,Fan,Add,10,FALSE,None,None,None,Add,0
+33,Sword,Equipment,Myth,Kiara,1,Right,None,None,None,None,Add,10,TRUE,Kiara,Equipment,None,Add,30
+34,Syringe,Equipment,Myth,None,1,None,Trading Agency,Artist,Research Facility,None,Add,10,FALSE,None,None,None,Add,0
+35,Takodachi,Myth,Ina,None,1,None,Gacha Casino,Artist,None,None,Add,15,FALSE,None,None,None,Add,0
+36,Trident,Equipment,Myth,Gura,1,DiagonalTopRight,None,None,None,None,Multiply,3,TRUE,Gura,Equipment,None,Multiply,5
+37,Udin,HoloID,None,None,1,DiagonalBottomRight,None,None,None,None,Add,10,TRUE,Equipment,HoloID,None,Multiply,3
+38,Umbrella,Equipment,HoloID,Kobo,1,Bottom,None,None,None,None,Multiply,3,TRUE,Equipment,None,None,Multiply,6
+39,Zain,Talent,None,None,1,None,Talent Academy,None,None,Concert Venue,Add,10,FALSE,None,None,None,Add,0
+40,Yorick,Talent,None,None,1,None,Space Colony,Research Facility,None,None,Add,10,FALSE,None,None,None,Add,0
+41,Jailbird,Talent,None,None,1,Bottom,None,None,None,None,Add,15,FALSE,None,None,None,Add,0
+42,Perroccino,Talent,Fuwamoco,None,1,Top,None,None,None,None,Multiply,3,TRUE,Fuwamoco,Talent,None,Multiply,6
+43,Thorn,Equipment,Justice,None,1,Right,None,None,None,None,Add,12,TRUE,Equipment,None,None,Add,40
+44,Otomo,Justice,None,None,1,None,Research Facility,Holo Museum,None,None,Add,10,FALSE,None,None,None,Add,0
+45,Popo,Justice,Gigi,None,1,None,Karaoke Bar,None,None,Fan,Add,10,FALSE,None,None,None,Add,0
+46,Grem,Justice,Gigi,None,1,DiagonalTopLeft,None,None,None,None,Multiply,3,TRUE,Justice,Gigi,None,Multiply,5
+47,Chattino,Justice,None,None,1,None,Artist,Luxury Resort,None,None,Add,10,FALSE,None,None,None,Add,0
+48,Gauntlets,Justice,Equipment,Gigi,1,None,Talent Academy,Idol Shrine,Themed Cafe,None,Add,5,FALSE,None,None,None,Add,0
+49,Magnifying Glass,Equipment,Amelia,Myth,1,None,Research Facility,None,None,Trading Agency,Add,10,FALSE,None,None,None,Add,0
+50,Oni Mask,Equipment,Talent,None,1,None,Idol Temple,None,None,Idol Shrine,Add,10,FALSE,None,None,None,Add,0
+51,Inu,Talent,None,None,1,DiagonalBottomRight,None,None,None,None,Multiply,3,TRUE,Gura,None,None,Multiply,5
+52,KFP Employee,Myth,Kiara,None,1,DiagonalBottomLeft,None,None,None,None,Add,10,TRUE,Kiara,None,None,Multiply,8
+53,Bloom & Gloom,Talent,IRyS,None,1,DiagonalBottomRight,None,None,None,None,Add,12,TRUE,IRyS,None,None,Multiply,8
+54,Tatang,HoloID,Talent,None,1,None,Concert Venue,None,None,None,Add,15,FALSE,None,None,None,Add,0
+55,Shiokko,Talent,None,None,1,None,Multiverse Device,Royal Palace,None,None,Add,10,FALSE,None,None,None,Add,0
+56,Yukimin,Talent,None,None,1,None,Karaoke Bar,Concert Venue,Luxury Resort,None,Add,10,FALSE,None,None,None,Add,0
+57,Gallon,HoloID,None,None,1,DiagonalTopRight,None,None,None,None,Add,25,TRUE,HoloID,None,None,Add,100
+58,Cilus,HoloID,Kobo,None,1,DiagonalTopLeft,None,None,None,None,Multiply,3,TRUE,Equipment,Kobo,HoloID,Multiply,5
+59,Bazo,HoloID,None,None,1,None,Trading Agency,Research Facility,Governamental Ministry,None,Add,10,FALSE,None,None,None,Add,0
+60,Arms Cache,Equipment,None,None,2,None,Talent Academy,Holo Museum,None,None,Add,40,FALSE,None,None,None,Add,0
+61,Council Collab,Council,None,None,2,Bottom,None,None,None,None,Multiply,8,TRUE,Council,None,None,Multiply,15
+62,Smol Calli,Calli,Myth,None,2,DiagonalTopLeft,None,None,None,None,Add,20,TRUE,Gura,Kiara,Ina,Multiply,10
+63,Smol Ame,Myth,Amelia,None,2,None,Talent Academy,Research Facility,None,None,Add,25,FALSE,None,None,None,Add,0
+64,Smol Bijou,Bijou,Talent,None,2,None,Multiverse Device,Holo Museum,None,None,Add,40,FALSE,None,None,None,Add,0
+65,Smol Gura,Gura,Myth,None,2,None,Karaoke Bar,None,None,None,Add,50,FALSE,None,None,None,Add,0
+66,Smol Ina,Ina,Myth,None,2,None,Artist,Gacha Casino,None,None,Add,40,FALSE,None,None,None,Add,0
+67,Smol IRyS,IRyS,Talent,None,2,None,Artist,Karaoke Bar,Talent Academy,None,Add,30,FALSE,None,None,None,Add,0
+68,Smol Kiara,Kiara,Myth,None,2,None,Chain Restaurant,None,None,None,Add,50,FALSE,None,None,None,Add,0
+69,Smol Kobo,Kobo,HoloID,None,2,DiagonalTopRight,None,None,None,None,Add,30,TRUE,Marine,Talent,None,Multiply,15
+70,Smol Korone,Korone,Gamers,None,2,None,Themed Cafe,Royal Palace,Theme Park,None,Add,30,FALSE,None,None,None,Add,0
+71,Smol Kronii,Kronii,Council,None,2,None,Multiverse Device,None,None,Idol Shrine,Add,20,FALSE,None,None,None,Add,0
+72,Smol Laplus,Talent,None,None,2,None,Governamental Ministry,Space Colony,None,None,Add,50,FALSE,None,None,None,Add,0
+73,Smol Marine,Marine,Fantasy,None,2,None,Gacha Casino,Idol Shrine,None,None,Add,40,FALSE,None,None,None,Add,0
+74,Smol Miko,Talent,None,None,2,None,Prime Fan,Gacha Casino,Concert Venue,None,Add,30,FALSE,None,None,None,Add,0
+75,Smol Mumei,Council,None,None,2,None,Trading Agency,Idol Temple,None,None,Add,40,FALSE,None,None,None,Add,0
+76,Smol Nene,Talent,None,None,2,None,Idol Shrine,Prime Fan,None,None,Add,40,FALSE,None,None,None,Add,0
+77,Smol Pekora,Fantasy,None,None,2,Left,None,None,None,None,Add,30,TRUE,Fantasy,None,None,Multiply,15
+78,Sword and Shield,Equipment,Myth,Kiara,2,Bottom,None,None,None,None,Add,20,TRUE,Myth,Kiara,Equipment,Multiply,15
+79,Wildlife,Myth,Council,Gamers,2,DiagonalBottomRight,None,None,None,None,Add,30,TRUE,Myth,Council,Gamers,Add,90
+80,-Myth- Collab,Myth,None,None,2,Top,None,None,None,None,Add,30,TRUE,Myth,None,None,Multiply,15
+81,Smol Gigi,Gigi,Justice,None,2,Bottom,None,None,None,None,Multiply,10,TRUE,Justice,None,None,Multiply,40
+82,Smol Ollie,HoloID,None,None,2,None,Theme Park,Concert Venue,None,None,Add,40,FALSE,None,None,None,Add,0
+83,Smol Suisei,Talent,None,None,2,DiagonalBottomRight,None,None,None,None,Multiply,8,TRUE,Talent,Fantasy,None,Multiply,15
+84,Smol Baelz,Baelz,Council,None,2,Right,None,None,None,None,Add,40,TRUE,Council,None,None,Multiply,15
+85,Mori Calliope,Calli,Myth,None,3,DiagonalBottomLeft,None,None,None,None,Multiply,20,TRUE,Kiara,None,None,Multiply,40
+86,Gawr Gura,Gura,Myth,None,3,None,Karaoke Bar,Themed Cafe,Idol Shrine,None,Add,70,FALSE,None,None,None,Add,0
+87,Houshou Marine,Marine,Fantasy,None,3,None,Luxury Resort,Holo Museum,Royal Palace,None,Add,70,FALSE,None,None,None,Add,0
+88,Harusaki Nodoka,Equipment,None,None,3,Top,None,None,None,None,Add,15,TRUE,Equipment,None,None,Multiply,30
+89,Nanashi Mumei,Council,None,None,3,None,Idol Temple,Prime Fan,Talent Academy,None,Add,70,FALSE,None,None,None,Add,0
+90,Inugami Korone,Korone,Gamers,None,3,DiagonalTopRight,None,None,None,None,Add,70,TRUE,Gamers,Korone,None,Multiply,35
+91,Ninomae Ina'Nis,Ina,Myth,None,3,None,Artist,Space Colony,Concert Venue,None,Add,70,FALSE,None,None,None,Add,0
+92,Cecilia Immergreen,Justice,None,None,3,Left,None,None,None,None,Add,80,TRUE,Justice,None,None,Multiply,30
+93,Ancient Whisper,Myth,Ina,None,4,None,Artist,Idol Shrine,Idol Temple,None,Add,200,FALSE,None,None,None,Add,0
+94,Bau Bau,Fuwamoco,Talent,None,4,None,Space Colony,None,None,Artist,Add,50,FALSE,None,None,None,Add,0
+95,Bweh,Bijou,Talent,None,4,DiagonalTopLeft,None,None,None,None,Multiply,50,TRUE,Talent,Bijou,None,Multiply,70
+96,Fubuzilla,Gamers,None,None,4,Bottom,None,None,None,None,Add,200,TRUE,Gamers,None,None,Multiply,80
+97,Ground Pound,Myth,Amelia,None,4,Right,None,None,None,None,Multiply,40,TRUE,Myth,Amelia,None,Multiply,80
+98,Hatotaurus,Gamers,None,None,4,Left,None,None,None,None,Add,200,TRUE,Equipment,None,None,Multiply,80
+99,Spelling Bee,Myth,Gura,Amelia,4,None,Prime Fan,Concert Venue,Royal Palace,None,Add,150,FALSE,None,None,None,Add,0
+100,Marriage Certificate,Talent,None,None,4,None,Themed Cafe,Luxury Resort,None,None,Add,200,FALSE,None,None,None,Add,0
+101,Kaela Kovalskia,HoloID,None,None,3,Right,None,None,None,None,Multiply,20,TRUE,HoloID,Kronii,None,Multiply,35
+102,Lance,Equipment,Justice,None,1,Right,None,None,None,None,Multiply,2,TRUE,Justice,None,None,Multiply,10
+103,Jill,Fantasy,None,None,1,DiagonalTopLeft,None,None,None,None,Multiply,3,TRUE,Fantasy,None,None,Multiply,8
+104,Kintsuba,Fantasy,None,None,1,None,Themed Cafe,Theme Park,None,None,Add,12,FALSE,None,None,None,Add,0
+105,Novelite,Talent,None,None,1,Top,None,None,None,None,Add,10,TRUE,Bijou,Fuwamoco,None,Multiply,8
+106,Pemaloe,HoloID,None,None,1,None,Talent Academy,None,None,Fan,Add,10,FALSE,None,None,None,Multiply,10
+107,Smol Noel,Fantasy,None,None,2,Top,None,None,None,None,Multiply,10,TRUE,Fantasy,None,None,Multiply,40
+108,Smol Raora,Justice,None,None,2,None,Chain Restaurant,None,None,Themed Cafe,Add,20,FALSE,None,None,None,Add,0
+109,Gigi Murin,Justice,Gigi,None,3,DiagonalBottomLeft,None,None,None,None,Multiply,15,TRUE,Justice,Gigi,None,Multiply,45
+110,Kobo Kanaeru,HoloID,Kobo,None,3,None,Idol Shrine,None,None,Luxury Resort,Add,20,FALSE,None,None,None,Add,0
+111,Usada Pekora,Fantasy,None,None,3,Left,None,None,None,None,Add,100,TRUE,Marine,None,None,Add,350

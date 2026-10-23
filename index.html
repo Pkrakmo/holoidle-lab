@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101018" />
+    <title>Holoidle · Bonus Card Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="calculator.css" />
+    <link rel="stylesheet" href="foil.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <header class="topbar">
+      <a class="brand" href="#"><span class="brand-mark">H</span><span>HOLOIDLE <i>FAN TOOL</i></span></a>
+      <nav class="page-nav" aria-label="Main pages"><a class="page-tab active" href="#planner" data-page="planner" aria-current="page" aria-controls="planner-page">Planner</a><a class="page-tab" href="#assets" data-page="assets" aria-controls="assets-page">Assets</a></nav>
+      <div class="header-actions"><div class="import-group"><div class="import-copy"><span id="import-status" role="status">Reads locally; your save is not uploaded or changed.</span><details class="save-location"><summary>Where to find save.holo</summary><span class="save-path">Linux: <code>~/.steam/steam/steamapps/compatdata/3543350/pfx/drive_c/users/steamuser/AppData/LocalLow/Kindred Interactive/Holoidle/save.holo</code><button class="copy-path" type="button" data-copy-path="~/.steam/steam/steamapps/compatdata/3543350/pfx/drive_c/users/steamuser/AppData/LocalLow/Kindred Interactive/Holoidle">Copy path</button></span><span class="save-path">Windows: <code>%USERPROFILE%\AppData\LocalLow\Kindred Interactive\Holoidle\save.holo</code><button class="copy-path" type="button" data-copy-path="%USERPROFILE%\AppData\LocalLow\Kindred Interactive\Holoidle">Copy path</button></span><span id="copy-path-status" role="status"></span></details></div><label class="import-button header-import">Load save<input id="save-file" type="file" accept=".holo,.json,application/json,text/plain" /></label></div></div>
+    </header>
+    <main>
+      <div class="page-view active" id="planner-page" data-page-view="planner">
+      <section class="intro">
+        <div class="eyebrow"><span></span> HOLOIDLE · FAN TOOL</div>
+        <h1>Plan your <em>lineup.</em></h1>
+        <p>Arrange collab cards, check their links, and compare asset bonuses.</p>
+        <p class="project-notice"><strong>Experimental · Work in progress.</strong> Results and features may change.</p>
+      </section>
+      <div class="planner-layout">
+      <section class="board-section">
+        <div class="section-heading"><div><span class="step">01</span><h2>Your board</h2></div><div class="board-count"><b id="placed-count">0</b><span> / 8 PLACED</span></div></div>
+        <div class="board-frame"><div class="board" id="board" aria-label="2 by 4 card board"></div></div>
+        <div class="board-footer"><span id="board-hint">Select a card below, then choose a slot.</span><button id="clear-board" class="text-button">Clear board <span>↗</span></button></div>
+        <p class="calculation-note" style="margin:0 2px 25px;color:#65626f;font:8px 'DM Mono',monospace;letter-spacing:.03em">Arrows affect one adjacent slot · values use the game's ×3 scale · foil can be toggled per card · Holoscope bonuses excluded</p>
+      </section>
+      </div>
+      <section class="planner-results" aria-labelledby="planner-results-title"><div class="planner-results-heading"><div><span class="step">02</span><h2 id="planner-results-title">Board effects</h2></div><span id="layout-status" class="layout-status">BOARD EMPTY</span></div><div id="calculation-results" class="calculation-results"></div></section>
+
+      <section class="collection-section">
+        <div class="section-heading collection-heading"><div><span class="step">03</span><h2>Card collection</h2><span class="card-total" id="card-total">Loading…</span></div></div>
+        <div class="toolbar"><label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search cards, groups, effects…" autocomplete="off" /></label><div class="filters" id="filters"><button class="filter active" data-tier="all">All tiers</button><button class="filter" data-tier="1">I</button><button class="filter" data-tier="2">II</button><button class="filter" data-tier="3">III</button><button class="filter" data-tier="4">IV</button></div><div class="ownership-filters" role="group" aria-label="Filter cards by ownership"><button id="owned-filter" class="owned-filter" type="button" aria-pressed="false" disabled>Owned</button><button id="unowned-filter" class="owned-filter" type="button" aria-pressed="false" disabled>Not owned</button></div></div>
+        <p id="ownership-note" class="ownership-note">Load a save to see which cards you own. Unowned cards remain available for hypothetical combinations.</p>
+        <div class="direction-toolbar"><span class="filter-label">DIRECTION</span><div class="direction-filters" id="direction-filters" aria-label="Filter by card direction"></div></div>
+        <div class="collection-grid" id="collection" aria-live="polite"></div>
+        <div class="empty-state" id="empty-state" hidden>No cards match that search.</div>
+      </section>
+      </div>
+      <section class="page-view assets-page" id="assets-page" data-page-view="assets" hidden aria-labelledby="asset-dashboard-title">
+        <section class="intro assets-intro"><div class="eyebrow"><span></span> HOLOIDLE · SAVE OVERVIEW</div><h1>Your <em>assets.</em></h1><p>Review owned assets and estimated income from your save.</p><p class="project-notice"><strong>Experimental · Work in progress.</strong> Results and features may change.</p></section>
+        <div class="asset-dashboard">
+          <div class="asset-dashboard-heading"><div><span class="step">01</span><h2 id="asset-dashboard-title">Assets dashboard</h2></div><div id="asset-dashboard-total" class="asset-dashboard-total">WAITING FOR SAVE</div></div>
+          <p id="asset-dashboard-note" class="asset-dashboard-note">Load a save file to see owned assets, purchased upgrades, and calculated contribution.</p>
+          <div class="asset-table-wrap"><table class="asset-table"><thead><tr><th>Asset</th><th>Owned</th><th>Upgrades</th><th>Calculated IpS</th></tr></thead><tbody id="asset-dashboard-rows"></tbody></table></div>
+          <div id="asset-dashboard-compare" class="asset-dashboard-compare" hidden></div>
+        </div>
+      </section>
+      <footer><span>Experimental · Work in progress. Not affiliated with Holoidle or its creators.</span><span>Made for planning ✦</span></footer>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
