@@ -11,12 +11,13 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="calculator.css" />
     <link rel="stylesheet" href="foil.css" />
+    <link rel="stylesheet" href="holoscope.css" />
   </head>
   <body>
     <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
     <header class="topbar">
       <a class="brand" href="#"><span class="brand-mark">H</span><span>HOLOIDLE <i>FAN TOOL</i></span></a>
-      <nav class="page-nav" aria-label="Main pages"><a class="page-tab active" href="#planner" data-page="planner" aria-current="page" aria-controls="planner-page">Planner</a><a class="page-tab" href="#assets" data-page="assets" aria-controls="assets-page">Assets</a></nav>
+      <nav class="page-nav" aria-label="Main pages"><a class="page-tab active" href="#planner" data-page="planner" aria-current="page" aria-controls="planner-page">Planner</a><a class="page-tab" href="#assets" data-page="assets" aria-controls="assets-page">Assets</a><a class="page-tab" href="#holoscope" data-page="holoscope" aria-controls="holoscope-page">Holoscope</a></nav>
       <div class="header-actions"><div class="import-group"><div class="import-copy"><span id="import-status" role="status">Reads locally; your save is not uploaded or changed.</span><details class="save-location"><summary>Where to find save.holo</summary><span class="save-path">Linux: <code>~/.steam/steam/steamapps/compatdata/3543350/pfx/drive_c/users/steamuser/AppData/LocalLow/Kindred Interactive/Holoidle/save.holo</code><button class="copy-path" type="button" data-copy-path="~/.steam/steam/steamapps/compatdata/3543350/pfx/drive_c/users/steamuser/AppData/LocalLow/Kindred Interactive/Holoidle">Copy path</button></span><span class="save-path">Windows: <code>%USERPROFILE%\AppData\LocalLow\Kindred Interactive\Holoidle\save.holo</code><button class="copy-path" type="button" data-copy-path="%USERPROFILE%\AppData\LocalLow\Kindred Interactive\Holoidle">Copy path</button></span><span id="copy-path-status" role="status"></span></details></div><label class="import-button header-import">Load save<input id="save-file" type="file" accept=".holo,.json,application/json,text/plain" /></label></div></div>
     </header>
     <main>
@@ -54,6 +55,14 @@
           <div class="asset-table-wrap"><table class="asset-table"><thead><tr><th>Asset</th><th>Owned</th><th>Upgrades</th><th>Calculated IpS</th></tr></thead><tbody id="asset-dashboard-rows"></tbody></table></div>
           <div id="asset-dashboard-compare" class="asset-dashboard-compare" hidden></div>
         </div>
+      </section>
+      <section class="page-view holoscope-page" id="holoscope-page" data-page-view="holoscope" hidden aria-labelledby="holoscope-title">
+        <section class="intro holoscope-intro"><div class="eyebrow"><span></span> HOLOIDLE · SAVE OVERVIEW</div><h1>Your <em>Holoscope.</em></h1><p>Review star ranks and their effects using data from your imported save.</p><p class="project-notice"><strong>Read only.</strong> Your save file is never changed.</p></section>
+        <section class="holoscope-dashboard" aria-labelledby="holoscope-title">
+          <div class="holoscope-dashboard-heading"><div><span class="step">01</span><h2 id="holoscope-title">Holoscope stars</h2></div><div id="holoscope-power" class="holoscope-power">WAITING FOR SAVE</div></div>
+          <p id="holoscope-summary" class="holoscope-summary">Load a save file to review Holoscope power and star ranks.</p>
+          <div id="holoscope-stars" class="holoscope-stars"></div>
+        </section>
       </section>
       <footer><span>Experimental · Work in progress. Not affiliated with Holoidle or its creators.</span><span>Made for planning ✦</span></footer>
     </main>

@@ -8,6 +8,7 @@ An experimental, community made browser tool for exploring Holoidle collab card 
 - Search cards by name, group, effect, or affected asset. Asset names are translated to the dashboard's canonical names.
 - Simulate foil cards and filter the collection by ownership after importing a save.
 - Apply imported Holoscope group, direction, and Add bonuses to card effects.
+- Review Holoscope power, saved star ranks, and effective ranks in a dedicated view.
 - Import a `save.holo` file or plaintext JSON to view equipped cards, ownership, and the Assets dashboard. The file is read in the browser and is not uploaded or modified.
 - Keep the current board and foil selections in this browser's local storage.
 - Load saved card layouts from an imported `save.holo` file, alongside named presets saved in this browser.

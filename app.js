@@ -14,6 +14,31 @@ const ASSET_DATA = [
   ['Museum', 65e6], ['Theme Park', 405e6], ['Resort', 2.5e9], ['Temple', 21e9], ['Royal Palace', 145e9],
   ['Ministry', 1e12], ['Research Institute', 9e12], ['Space Colony', 75e12], ['Multiverse', 505e12], ['Yagoo', 10.1973e15]
 ].map(([name, baseIpS], id) => ({ id, name, baseIpS }));
+const HOLOSCOPE_STARS = [
+  ...[
+    ['Artifex', 'Artist'], ['Sanctaria', 'Shrine'], ['Astroccino', 'Coffee'], ['Melodia', 'Karaoke'],
+    ['Olivara', 'Chain'], ['Tradeon', 'Trading'], ['Festivara', 'Concert'], ['Fortunara', 'Gacha'],
+    ['Oratorion', 'Talent Agency'], ['Relicara', 'Museum'], ['Wonderis', 'Theme Park'], ['Aqualis', 'Resort'],
+    ['Reveria', 'Temple'], ['Imperion', 'Royal Palace'], ['Civitas', 'Ministry'], ['Atomis', 'Research Institute']
+  ].map(([name, asset], index) => ({ id: `star_asset_${index + 2}`, name, category: 'Assets', detail: `${asset} income doubles per effective rank.`, maxRank: [45, 43, 40, 38, 36, 33, 31, 28, 25, 23, 20, 17, 14, 11, 8, 5][index] })),
+  ...[
+    ['myth', 'Fableon', 'Myth'], ['equipment', 'Vulkaris', 'Equipment'], ['council', 'Concorda', 'Council'],
+    ['fantasy', 'Fantasia', 'Fantasy'], ['gamers', 'Bestia', 'Gamers'], ['talent', 'Ingenium', 'Talent'],
+    ['justice', 'Praetorix', 'Justice'], ['holoid', 'Amarentia', 'HoloID']
+  ].map(([key, name, label]) => ({ id: `star_group_${key}`, name, category: 'Collab groups', detail: `${label} card effects gain 10% per effective rank.`, maxRank: 1000 })),
+  ...[
+    ['Top', 'Ascendia'], ['Bottom', 'Descende'], ['Left', 'Levoria'], ['Right', 'Dexterex'],
+    ['DiagonalBottomLeft', 'Tenebralis'], ['DiagonalBottomRight', 'Solvanta'], ['DiagonalTopLeft', 'Celestia'], ['DiagonalTopRight', 'Aetheris']
+  ].map(([direction, name]) => ({ id: `star_direction_${direction.toLowerCase()}`, name, category: 'Directions', detail: `${DIRECTION_LABELS[direction]}-pointing card effects gain 20% per effective rank.`, maxRank: 1000 })),
+  { id: 'star_add', name: 'Augmentia', category: 'Special', detail: 'Directed Add effects gain 1000% per effective rank.', maxRank: 1000 },
+  { id: 'star_holocoin', name: 'Abundantia', category: 'Special', detail: 'Adds 4% Holocoin income per effective rank.', maxRank: 25 },
+  { id: 'star_daily_mission', name: 'Daily Mission', category: 'Special', detail: 'Improves daily mission bonuses.', maxRank: 5 },
+  { id: 'star_overdrive_ips', name: 'Overdrive IpS', category: 'Special', detail: 'Adds 1% Overdrive IpS per rank.', maxRank: 10 },
+  { id: 'star_overdrive_duration', name: 'Overdrive Duration', category: 'Special', detail: 'Adds 0.1 seconds of Overdrive per rank.', maxRank: 100 },
+  { id: 'star_overdrive_click', name: 'Overdrive Click', category: 'Special', detail: 'Improves click power during Overdrive.', maxRank: 100 },
+  { id: 'star_overdrive_wait', name: 'Overdrive Wait', category: 'Special', detail: 'Reduces Overdrive cooldown by 1 minute per rank.', maxRank: 60 },
+  { id: 'star_overdrive_holocoin', name: 'Overdrive Holocoin', category: 'Special', detail: 'Adds 1% Holocoin chance during Overdrive per rank.', maxRank: 25 }
+];
 // Card data uses game-facing labels while the dashboard uses shorter names.
 const ASSET_NAME_TRANSLATIONS = new Map([
   ['Fan', 'Fans'], ['Prime Fan', 'Prime Fans'], ['Idol Shrine', 'Shrine'], ['Karaoke Bar', 'Karaoke'],
@@ -237,6 +262,35 @@ function renderAssetDashboard(save = importedSave) {
     assetDashboardCompare.innerHTML = `<span>Save IpS <strong>${formatLargeNumber(savedIps)}</strong> · dashboard estimate <strong>${formatLargeNumber(total)}</strong></span><span>Difference <strong>${formatLargeNumber(difference)}</strong></span>`;
   }
   if (warnings.length) assetDashboardNote.textContent += ` Import warnings: ${warnings.join(' ')}`;
+}
+
+function renderHoloscope(save = importedSave) {
+  const power = Math.max(0, Number(save?.holoscopePower) || 0);
+  const hasStars = Array.isArray(save?.stars);
+  const starRanks = new Map(hasStars ? save.stars.filter(star => star && typeof star.id === 'string').map(star => [star.id, Math.max(0, Number(star.rank) || 0)]) : []);
+  const effectiveRank = rank => Math.floor(rank * power / 100);
+  const totalRanks = [...starRanks.values()].reduce((sum, rank) => sum + rank, 0);
+  const activeStars = HOLOSCOPE_STARS.filter(star => effectiveRank(starRanks.get(star.id) || 0) > 0).length;
+  document.querySelector('#holoscope-power').textContent = save ? `${power}% POWER` : 'WAITING FOR SAVE';
+  document.querySelector('#holoscope-summary').textContent = save
+    ? hasStars ? `${activeStars} active stars · ${totalRanks.toLocaleString()} saved ranks` : 'This save does not contain Holoscope star data.'
+    : 'Load a save file to review Holoscope power and star ranks.';
+  const container = document.querySelector('#holoscope-stars');
+  if (!save || !hasStars) { container.innerHTML = ''; return; }
+  const groupsByCategory = ['Assets', 'Collab groups', 'Directions', 'Special'];
+  container.innerHTML = groupsByCategory.map(category => {
+    const rows = HOLOSCOPE_STARS.filter(star => star.category === category).map(star => {
+      const rank = starRanks.get(star.id) || 0;
+      const effective = effectiveRank(rank);
+      let currentEffect = star.detail;
+      if (star.id.startsWith('star_asset_')) currentEffect = `Income multiplier ×${formatLargeNumber(Math.pow(2, effective))}`;
+      else if (star.id.startsWith('star_group_')) currentEffect = `Card effect bonus +${effective * 10}%`;
+      else if (star.id.startsWith('star_direction_')) currentEffect = `Card effect bonus +${effective * 20}%`;
+      else if (star.id === 'star_add') currentEffect = `Directed Add bonus +${effective * 1000}%`;
+      return `<article class="holoscope-star"><div class="holoscope-star-heading"><h3>${safe(star.name)}</h3><span>${rank.toLocaleString()} / ${star.maxRank.toLocaleString()} RANK</span></div><p>${safe(star.detail)}</p><div class="holoscope-star-effect"><span>At ${power}% power</span><strong>${safe(currentEffect)}${power > 0 && effective !== rank ? ` · effective rank ${effective}` : ''}</strong></div></article>`;
+    }).join('');
+    return `<section class="holoscope-group" aria-label="${safe(category)}"><h2>${safe(category)}</h2><div class="holoscope-grid">${rows}</div></section>`;
+  }).join('');
 }
 
 function groups(card) {
@@ -548,6 +602,7 @@ function importCardSetup(save) {
   importedSave = save;
   saveAndRender();
   renderAssetDashboard(save);
+  renderHoloscope(save);
   return occupied.size;
 }
 
@@ -559,6 +614,7 @@ saveFileInput.addEventListener('change', async () => {
     const save = await decodeSaveFile(file);
     importedSave = save;
     renderAssetDashboard(save);
+    renderHoloscope(save);
     if (!cards.length) {
       pendingSave = save;
       importStatus.textContent = 'Save read; waiting for the card catalog…';
@@ -697,6 +753,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && selectedId !== null) { selectedId = null; renderCollection(); updateHint(); }
 });
 
+renderHoloscope();
 fetch(CARD_FILE).then(response => {
   if (!response.ok) throw new Error('Card data could not be loaded.');
   return response.text();
