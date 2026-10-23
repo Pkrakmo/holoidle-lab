@@ -85,6 +85,8 @@ let activeTier = 'all';
 let activeDirection = 'all';
 let placements = loadPlacements();
 let foilIds = new Set(loadFoils());
+let presets = loadPresets();
+let savePresets = [];
 let importedSave = null;
 let pendingSave = null;
 let ownedCardCounts = new Map();
@@ -106,6 +108,26 @@ function loadFoils() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     return Array.isArray(saved) || !Array.isArray(saved.foilIds) ? [] : saved.foilIds.filter(Number.isInteger);
   } catch { return []; }
+}
+
+function loadPresets() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return !Array.isArray(saved) && Array.isArray(saved.presets)
+      ? saved.presets.filter(preset => preset && typeof preset.name === 'string' && Array.isArray(preset.placements) && preset.placements.length === 8)
+        .map(preset => ({ name: preset.name.slice(0, 40), placements: preset.placements.map(id => Number.isInteger(id) ? id : null), foilIds: Array.isArray(preset.foilIds) ? preset.foilIds.filter(Number.isInteger) : [] }))
+      : [];
+  } catch { return []; }
+}
+
+function renderPresets() {
+  const picker = document.querySelector('#board-presets');
+  const selected = picker.value;
+  const localOptions = presets.map((preset, index) => `<option value="local:${index}">${safe(preset.name)}</option>`).join('');
+  const saveOptions = savePresets.map((preset, index) => `<option value="save:${index}">${safe(preset.name)}</option>`).join('');
+  picker.innerHTML = `<option value="">Choose preset…</option>${localOptions ? `<optgroup label="This browser">${localOptions}</optgroup>` : ''}${saveOptions ? `<optgroup label="Imported save.holo">${saveOptions}</optgroup>` : ''}`;
+  if (selected && picker.querySelector(`option[value="${selected}"]`)) picker.value = selected;
+  document.querySelector('#delete-preset').disabled = !picker.value.startsWith('local:');
 }
 
 function parseCsvLine(line) {
@@ -237,11 +259,27 @@ function targetIndex(index, direction) {
   return row < 0 || row > 1 || column < 0 || column > 3 ? -1 : row * 4 + column;
 }
 
+function holoscopeRank(starId) {
+  const power = Math.max(0, Number(importedSave?.holoscopePower) || 0);
+  const star = Array.isArray(importedSave?.stars) ? importedSave.stars.find(item => item?.id === starId) : null;
+  return power > 0 ? Math.floor(Math.max(0, Number(star?.rank) || 0) * power / 100) : 0;
+}
+
+function holoscopeEffectScale(card, operation) {
+  const groupBonus = groups(card).reduce((sum, group) => sum + 10 * holoscopeRank(`star_group_${group.toLowerCase()}`), 0);
+  const directionBonus = card.Direction !== 'None' ? 20 * holoscopeRank(`star_direction_${card.Direction.toLowerCase()}`) : 0;
+  const addBonus = operation === 'Add' && card.Direction !== 'None' ? 1000 * holoscopeRank('star_add') : 0;
+  return 1 + (groupBonus + directionBonus + addBonus) / 100;
+}
+
 function calculateBoardEffects() {
   const baseState = id => {
     const card = cards.find(item => item.ID === id);
     const multiplier = foilIds.has(id) ? 2 : 1;
-    return { regular: Number(card.Value) * 3 * multiplier, conditional: Number(card.ConditionalValue) * 3 * multiplier };
+    return {
+      regular: Number(card.Value) * 3 * multiplier * holoscopeEffectScale(card, card.EquipOperation),
+      conditional: Number(card.ConditionalValue) * 3 * multiplier * holoscopeEffectScale(card, card.ConditionalOperation)
+    };
   };
   const close = (a, b) => Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
   const sameStates = (a, b) => [...a.keys()].every(id => b.has(id) && close(a.get(id).regular, b.get(id).regular) && close(a.get(id).conditional, b.get(id).conditional));
@@ -359,6 +397,9 @@ function renderCalculator() {
   status.textContent = loop ? 'CYCLE · GAME REJECTS' : `${occupied.length} CARDS · NO CYCLE`;
 
   const sections = [];
+  const power = Math.max(0, Number(importedSave?.holoscopePower) || 0);
+  if (power > 0) sections.push(`<p class="calculator-footnote">Holoscope effects included at ${power}% power (effective star rank is rounded down).</p>`);
+  else sections.push('<p class="calculator-footnote">Import a save with Holoscope power and star ranks to include Holoscope card bonuses.</p>');
   sections.push(`<section class="result-block"><h3 class="result-title">Directional links · ${links.length}</h3>${linkRows.length ? `<ul class="result-list">${linkRows.join('')}</ul>` : '<p class="calculator-empty">No placed card currently points to another card.</p>'}</section>`);
   sections.push(`<section class="result-block"><h3 class="result-title">Asset bonuses</h3>${bonusRows.length || affectionRows.length ? `<ul class="result-list">${bonusRows.join('')}${affectionRows.join('')}</ul>` : '<p class="calculator-empty">No placed card currently modifies an asset.</p>'}</section>`);
   if (loop) sections.push('<div class="calculator-warning">These arrows form a cycle. Holoidle rejects a card placement that creates a directional loop, so this combination cannot be equipped as shown.</div>');
@@ -442,10 +483,11 @@ function updateHint() {
 }
 
 function saveAndRender() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ placements, foilIds: [...foilIds] }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ placements, foilIds: [...foilIds], presets }));
   renderBoard();
   renderCalculator();
   renderCollection();
+  renderPresets();
   updateHint();
 }
 
@@ -490,6 +532,16 @@ function importCardSetup(save) {
       if (card) nextFoils.add(card.ID);
     }
   }
+  savePresets = (Array.isArray(save.presets) ? save.presets : []).flatMap((value, index) => {
+    const ids = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [];
+    if (!ids.length) return [];
+    const next = Array(8).fill(null);
+    ids.slice(0, 8).forEach((rawId, slot) => {
+      const runtimeId = Number(rawId);
+      if (Number.isInteger(runtimeId) && runtimeId > 0 && cards.some(card => card.ID === runtimeId - 1)) next[slot] = runtimeId - 1;
+    });
+    return [{ name: `Save preset ${index + 1}`, placements: next, foilIds: [...nextFoils] }];
+  });
   placements = nextPlacements;
   foilIds = nextFoils;
   selectedId = null;
@@ -610,6 +662,37 @@ document.querySelector('#clear-board').addEventListener('click', () => {
   selectedId = null;
   saveAndRender();
 });
+document.querySelector('#board-presets').addEventListener('change', event => {
+  const [source, rawIndex] = event.target.value.split(':');
+  const index = Number(rawIndex);
+  const preset = source === 'save' ? savePresets[index] : source === 'local' ? presets[index] : null;
+  if (!preset) { document.querySelector('#delete-preset').disabled = true; return; }
+  placements = [...preset.placements];
+  foilIds = new Set(preset.foilIds);
+  selectedId = null;
+  saveAndRender();
+});
+document.querySelector('#save-preset').addEventListener('click', () => {
+  const name = window.prompt('Name this board preset:')?.trim().slice(0, 40);
+  if (!name) return;
+  const existing = presets.findIndex(preset => preset.name.toLowerCase() === name.toLowerCase());
+  const preset = { name, placements: [...placements], foilIds: [...foilIds] };
+  if (existing >= 0) presets[existing] = preset;
+  else presets.push(preset);
+  const picker = document.querySelector('#board-presets');
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ placements, foilIds: [...foilIds], presets }));
+  renderPresets();
+  picker.value = `local:${existing >= 0 ? existing : presets.length - 1}`;
+});
+document.querySelector('#delete-preset').addEventListener('click', () => {
+  const picker = document.querySelector('#board-presets');
+  if (!picker.value.startsWith('local:')) return;
+  const index = Number(picker.value.slice('local:'.length));
+  if (!presets[index]) return;
+  presets.splice(index, 1);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ placements, foilIds: [...foilIds], presets }));
+  renderPresets();
+});
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && selectedId !== null) { selectedId = null; renderCollection(); updateHint(); }
 });
@@ -622,8 +705,10 @@ fetch(CARD_FILE).then(response => {
   const valid = new Set(cards.map(card => card.ID));
   placements = placements.map(id => valid.has(id) ? id : null);
   foilIds = new Set([...foilIds].filter(id => valid.has(id)));
+  presets = presets.map(preset => ({ ...preset, placements: preset.placements.map(id => id === null || valid.has(id) ? id : null), foilIds: preset.foilIds.filter(id => valid.has(id)) }));
   document.querySelector('#card-total').textContent = `${cards.length} CARDS`;
   renderDirectionFilters();
+  renderPresets();
   saveAndRender();
   if (pendingSave) {
     const save = pendingSave;
