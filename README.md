@@ -2,6 +2,10 @@
 
 An experimental, community made browser tool for exploring Holoidle collab card layouts and reviewing assets from a local save file. It is not affiliated with, endorsed by, or sponsored by Holoidle or its creators.
 
+## Published site
+
+[Open Holoidle Lab](https://pkrakmo.github.io/holoidle-lab/).
+
 ## Features
 
 - Arrange up to eight collab cards on a 2 × 4 board and inspect directional effects.
@@ -14,7 +18,7 @@ An experimental, community made browser tool for exploring Holoidle collab card 
 - Load saved card layouts from an imported `save.holo` file, alongside named presets saved in this browser.
 - Copy and load versioned text codes that share board placements and foil selections.
 - Optionally restore an imported save from this browser's local storage, or forget its saved copy.
-- Search owned cards for a high-scoring, loop-free board layout using estimated aggregate asset bonuses.
+- Search owned cards for a high-scoring, loop-free board layout using estimated added IpS, including asset and card Holoscope bonuses.
 - View completed Encores and Steam-linked achievement progress recorded in the imported save.
 - Search and filter all 74 achievements, with current-versus-goal counts derived from save fields and goal text from the game definitions.
 - Manage save imports, on-device storage, and save-file location details from the dedicated Save page.

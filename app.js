@@ -725,7 +725,58 @@ function hasDirectionalLoop() {
   return false;
 }
 
-function scoreOwnedLayout(layout) {
+function ownedLayoutLimits(save = importedSave) {
+  const purchasedUnlocks = new Set((Array.isArray(save?.unlocksOwned) ? save.unlocksOwned : [])
+    .filter(unlock => unlock?.purchased !== false)
+    .map(unlock => Number(unlock?.id)).filter(Number.isInteger));
+  const slotCount = purchasedUnlocks.has(18) ? 8 : purchasedUnlocks.has(17) ? 6 : purchasedUnlocks.has(16) ? 4 : purchasedUnlocks.has(15) ? 2 : 1;
+  const slots = slotCount === 4 ? [0, 1, 4, 5] : slotCount === 6 ? [0, 1, 2, 4, 5, 6] : Array.from({ length: slotCount }, (_, index) => index);
+  const tier = Math.min(4, Math.max(1, Math.floor(Number(save?.collabPower) || 1)));
+  return { slots, tier };
+}
+
+function isAllowedOwnedLayout(layout, limits) {
+  return layout.every((id, index) => id === null || limits.slots.includes(index))
+    && layout.every(id => id === null || cards.find(card => card.ID === id)?.Tier <= limits.tier);
+}
+
+function calculatedAssetStates(save = importedSave) {
+  if (!Array.isArray(save?.assetsOwned)) return new Map();
+  const owned = ASSET_DATA.map((asset, index) => {
+    const record = save.assetsOwned[index] || {};
+    const upgradeIds = Array.isArray(record.assetUpgradesOwned) ? record.assetUpgradesOwned.map(Number).filter(Number.isInteger) : [];
+    const rangeStart = index === 0 ? 0 : index === 1 ? 15 : 50 + (index - 2) * 15;
+    const rangeEnd = index === 0 ? 14 : index === 1 ? 49 : rangeStart + 14;
+    return { ...asset, count: Math.max(0, Number(record.owned) || 0), upgradeIds: [...new Set(upgradeIds.filter(id => id >= rangeStart && id <= rangeEnd))] };
+  });
+  const nonFanCount = owned.slice(1).reduce((sum, asset) => sum + asset.count, 0);
+  const primeFans = owned[1].count;
+  const primeTargets = new Set(owned[1].upgradeIds.filter(id => PRIME_UPGRADE_TARGETS.has(id)).map(id => PRIME_UPGRADE_TARGETS.get(id)));
+  const rebirthScale = Math.pow(Math.max(1, Number(save.rebirthCount) || 1), 1.5);
+  const holoscopePower = Math.max(0, Number(save.holoscopePower) || 0);
+  const stars = new Map((Array.isArray(save.stars) ? save.stars : []).map(star => [star?.id, Number(star?.rank) || 0]));
+  const happinessRaw = (Number(save.happinessPercentage) || 0) - (Number(save.negativeHapppinessTrollPercentage) || 0);
+  const minimumHappiness = Number.isFinite(Number(save.minimumHappinessPercentage)) ? Number(save.minimumHappinessPercentage) : -100;
+  const happinessScale = 1 + Math.max(minimumHappiness, Math.min(100, happinessRaw)) / 100;
+  return new Map(owned.map(asset => {
+    const purchased = new Set(asset.upgradeIds);
+    const doubledUpgrades = asset.id === 0 ? [0, 1, 2].filter(id => purchased.has(id)).length : purchased.size;
+    const upgradedBase = asset.baseIpS * Math.pow(2, doubledUpgrades);
+    let upgradeIps = 0;
+    if (asset.id === 0) {
+      const lastFanUpgrade = [...FAN_UPGRADE_PER_ASSET.keys()].filter(id => purchased.has(id)).sort((a, b) => b - a)[0];
+      if (lastFanUpgrade !== undefined) upgradeIps = FAN_UPGRADE_PER_ASSET.get(lastFanUpgrade) * nonFanCount;
+    } else if (primeTargets.has(asset.id)) {
+      upgradeIps = upgradedBase * 0.01 * primeFans;
+    }
+    const effectiveStarRank = Math.floor((stars.get(`star_asset_${asset.id}`) || 0) * holoscopePower / 100);
+    const holoscopeScale = holoscopePower > 0 ? Math.pow(2, effectiveStarRank) : 1;
+    const perOwnedBase = (upgradedBase + upgradeIps) * holoscopeScale;
+    return [asset.name, { ...asset, perOwnedBase, contribution: perOwnedBase * rebirthScale * asset.count * happinessScale, rebirthScale, happinessScale }];
+  }));
+}
+
+function scoreOwnedLayout(layout, assetStates) {
   const previousPlacements = placements;
   placements = layout;
   try {
@@ -733,12 +784,6 @@ function scoreOwnedLayout(layout) {
     const effects = calculateBoardEffects();
     const assetBonuses = new Map();
     const affectionBonuses = new Map();
-    const ownedAssets = importedSave && Array.isArray(importedSave.assetsOwned) ? importedSave.assetsOwned : [];
-    const ownedCount = name => {
-      const canonical = canonicalAssetName(name);
-      const asset = ASSET_DATA.find(item => item.name === canonical);
-      return asset ? Math.max(0, Number(ownedAssets[asset.id]?.owned) || 0) : 0;
-    };
     layout.forEach(id => {
       if (id === null) return;
       const card = cards.find(item => item.ID === id);
@@ -749,11 +794,17 @@ function scoreOwnedLayout(layout) {
       if (!card.SecondaryAsset || card.SecondaryAsset === 'None') {
         assets.forEach(asset => assetBonuses.set(asset, (assetBonuses.get(asset) || 0) + value));
       } else {
-        const affection = value * Math.floor(ownedCount(card.SecondaryAsset) / 10);
-        assets.forEach(asset => affectionBonuses.set(asset, affection));
+        assets.forEach(asset => affectionBonuses.set(asset, { value, secondary: card.SecondaryAsset }));
       }
     });
-    return [...assetBonuses.values(), ...affectionBonuses.values()].reduce((sum, value) => sum + value, 0);
+    return [...assetStates.values()].reduce((sum, asset) => {
+      const percentageBonus = assetBonuses.get(asset.name) || 0;
+      const affection = affectionBonuses.get(asset.name);
+      const secondaryCount = affection ? assetStates.get(canonicalAssetName(affection.secondary))?.count || 0 : 0;
+      const affectionPerOwned = affection ? asset.perOwnedBase * affection.value / 100 * Math.floor(secondaryCount / 10) : 0;
+      const addedPerOwned = affectionPerOwned + (asset.perOwnedBase + affectionPerOwned) * percentageBonus / 100;
+      return sum + addedPerOwned * asset.count * asset.rebirthScale * asset.happinessScale;
+    }, 0);
   } finally {
     placements = previousPlacements;
   }
@@ -766,51 +817,54 @@ function randomOwnedLayout(candidateIds) {
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   const layout = Array(8).fill(null);
-  const slotOrder = Array.from({ length: 8 }, (_, index) => index);
+  const slotOrder = [...ownedLayoutLimits().slots];
   for (let i = slotOrder.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [slotOrder[i], slotOrder[j]] = [slotOrder[j], slotOrder[i]];
   }
-  pool.slice(0, 8).forEach((id, index) => { layout[slotOrder[index]] = id; });
+  pool.slice(0, slotOrder.length).forEach((id, index) => { layout[slotOrder[index]] = id; });
   return layout;
 }
 
 function findBestOwnedLayout() {
-  const candidates = cards.filter(card => (ownedCardCounts.get(card.ID) || 0) > 0).map(card => card.ID);
+  const limits = ownedLayoutLimits();
+  const assetStates = calculatedAssetStates();
+  const candidates = cards.filter(card => (ownedCardCounts.get(card.ID) || 0) > 0 && card.Tier <= limits.tier).map(card => card.ID);
   if (!candidates.length) return null;
   let bestLayout = Array(8).fill(null);
   let bestScore = 0;
-  if (placements.every(id => id === null || candidates.includes(id))) {
-    const currentScore = scoreOwnedLayout(placements);
+  if (isAllowedOwnedLayout(placements, limits) && placements.every(id => id === null || candidates.includes(id))) {
+    const currentScore = scoreOwnedLayout(placements, assetStates);
     if (currentScore > bestScore) { bestScore = currentScore; bestLayout = [...placements]; }
   }
 
   for (let restart = 0; restart < 4; restart++) {
     let layout = randomOwnedLayout(candidates);
-    let score = scoreOwnedLayout(layout);
+    let score = scoreOwnedLayout(layout, assetStates);
     if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
     for (let round = 0; round < 4; round++) {
       let nextLayout = null;
       let nextScore = score;
-      for (let slot = 0; slot < 8; slot++) {
+      for (const slot of limits.slots) {
         const previousId = layout[slot];
         if (previousId !== null) {
           layout[slot] = null;
-          const removedScore = scoreOwnedLayout(layout);
+          const removedScore = scoreOwnedLayout(layout, assetStates);
           if (removedScore > nextScore) { nextScore = removedScore; nextLayout = [...layout]; }
         }
         for (const id of candidates) {
           if (id === previousId || layout.includes(id)) continue;
           layout[slot] = id;
-          const candidateScore = scoreOwnedLayout(layout);
+          const candidateScore = scoreOwnedLayout(layout, assetStates);
           if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
         }
         layout[slot] = previousId;
       }
-      for (let left = 0; left < 8; left++) for (let right = left + 1; right < 8; right++) {
+      for (let leftPosition = 0; leftPosition < limits.slots.length; leftPosition++) for (let rightPosition = leftPosition + 1; rightPosition < limits.slots.length; rightPosition++) {
+        const left = limits.slots[leftPosition], right = limits.slots[rightPosition];
         if (layout[left] === layout[right]) continue;
         [layout[left], layout[right]] = [layout[right], layout[left]];
-        const candidateScore = scoreOwnedLayout(layout);
+        const candidateScore = scoreOwnedLayout(layout, assetStates);
         if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
         [layout[left], layout[right]] = [layout[right], layout[left]];
       }
@@ -820,7 +874,8 @@ function findBestOwnedLayout() {
       if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
     }
   }
-  return bestScore > 0 ? { layout: bestLayout, score: bestScore, candidateCount: candidates.length } : null;
+  const target = [...assetStates.values()].sort((a, b) => b.contribution - a.contribution)[0];
+  return bestScore > 0 ? { layout: bestLayout, score: bestScore, candidateCount: candidates.length, limits, target } : null;
 }
 
 function updateAffectedAssets(names) {
@@ -954,6 +1009,11 @@ function renderCollection() {
   optimizeOwnedButton.disabled = !hasOwnedCardData || ownedCount === 0;
   if (!hasOwnedCardData) ownedSearchStatus.textContent = 'Import a save to search layouts using your cards.';
   else if (ownedCount === 0) ownedSearchStatus.textContent = 'No owned collab cards were found in this save.';
+  else {
+    const limits = ownedLayoutLimits();
+    const eligibleCount = cards.filter(card => (ownedCardCounts.get(card.ID) || 0) > 0 && card.Tier <= limits.tier).length;
+    ownedSearchStatus.textContent = `Search uses ${limits.slots.length} unlocked slots and owned cards through tier ${tierNames[limits.tier]} (${eligibleCount} eligible).`;
+  }
   const ownedKinds = [...ownedCardCounts.values()].filter(count => count > 0).length;
   document.querySelector('#card-total').textContent = hasOwnedCardData ? `${ownedKinds} OWNED · ${cards.length} CARDS` : `${cards.length} CARDS`;
   const copyTotal = [...ownedCardCounts.values()].reduce((sum, count) => sum + count, 0);
@@ -1171,7 +1231,8 @@ optimizeOwnedButton.addEventListener('click', async () => {
     placements = result.layout;
     selectedId = null;
     saveAndRender();
-    ownedSearchStatus.textContent = `Best layout found from ${result.candidateCount} owned cards · estimated aggregate bonus ${formatLargeNumber(result.score)} percentage points. This is a heuristic search.`;
+    const target = result.target ? ` Highest current baseline: ${result.target.name} at ${formatLargeNumber(result.target.contribution)} IpS.` : '';
+    ownedSearchStatus.textContent = `Best layout found from ${result.candidateCount} eligible owned cards · ${result.limits.slots.length} unlocked slots · through tier ${tierNames[result.limits.tier]} · estimated added IpS ${formatLargeNumber(result.score)}.${target} This is a heuristic search.`;
   } catch (error) {
     ownedSearchStatus.textContent = `Layout search failed: ${error.message || 'unexpected error'}`;
   } finally {
