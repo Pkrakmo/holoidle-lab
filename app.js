@@ -1,5 +1,6 @@
 const CARD_FILE = `${import.meta.env.BASE_URL}CollabCards.txt`;
 const STORAGE_KEY = 'holoidle-bonus-card-board-v1';
+const SAVED_GAME_KEY = 'holoidle-imported-save-v1';
 const DIRECTIONS = {
   Top: '↑', Bottom: '↓', Left: '←', Right: '→',
   DiagonalTopLeft: '↖', DiagonalTopRight: '↗',
@@ -39,6 +40,82 @@ const HOLOSCOPE_STARS = [
   { id: 'star_overdrive_wait', name: 'Overdrive Wait', category: 'Special', detail: 'Reduces Overdrive cooldown by 1 minute per rank.', maxRank: 60 },
   { id: 'star_overdrive_holocoin', name: 'Overdrive Holocoin', category: 'Special', detail: 'Adds 1% Holocoin chance during Overdrive per rank.', maxRank: 25 }
 ];
+const GAME_ACHIEVEMENTS = [
+  ['freshstart', 'Fresh Start', 'Break the crystal for the first time'],
+  ['cardenthusiast', 'Card Enthusiast', 'Collect 10 different Collab cards'],
+  ['cardcollector', 'Card Collector', 'Collect 50 different Collab cards'],
+  ['cardspecialist', 'Card Specialist', 'Collect 100 different Collab cards'],
+  ['shinythings', 'Shiny Things', 'Gain your first Foil Collab card'],
+  ['treasurepile', 'Treasure Pile', 'Collect 20 different Foil Collab cards'],
+  ['completecollection', 'Complete Collection', 'Collect 100 different Foil Collab cards'],
+  ['newlife', 'New Life', 'Rebirth for the first time'],
+  ['backagain', 'Back Again', 'Rebirth 10 times'],
+  ['closedforrenovations', 'Closed for Renovations', 'Gain your first special furniture'],
+  ['feelslikehome', 'Feels Like Home', 'Collect all special furniture'],
+  ['upgradetime', 'Upgrade Time', 'Purchase your first asset upgrade'],
+  ['allin', 'All In', 'Purchase at least one asset upgrade for each asset'],
+  ['lockedin', 'Locked In', 'Purchase your first unlock'],
+  ['maximumefficiency', 'Maximum Efficiency', 'Purchase all unlocks'],
+  ['startingout', 'Starting Out', 'Reach 1000 IpS'],
+  ['trueicon', 'True Icon', 'Reach 100.000 IpS'],
+  ['nowweareidling', 'Now We Are Idling', 'Reach 1 million IpS'],
+  ['waithowmanyzeros', 'Wait, How Many Zeros?', 'Reach 1 billion IpS'],
+  ['cantcountthathigh', "Can't Count That High", 'Reach 1 trillion IpS'],
+  ['thatsalot', "That's a Lot", 'Reach 1 quadrillion IpS'],
+  ['nowthatsjustsilly', "Now That's Just Silly", 'Reach 1 quintillion IpS'],
+  ['banhammer', 'Ban Hammer', 'Ban your first troll'],
+  ['hammerofjustice', 'Hammer of Justice', 'Ban 20 trolls'],
+  ['fantastic', 'Fan-tastic', 'Purchase your first fan asset'],
+  ['idolarmy', 'Idol Army', 'Purchase 100 fan assets'],
+  ['fanfavorite', 'Fan Favorite', 'Purchase your first prime fan asset'],
+  ['primetime', 'Prime Time', 'Purchase 100 prime fan assets'],
+  ['artistictouch', 'Artistic Touch', 'Purchase your first artist'],
+  ['artgallery', 'Art Gallery', 'Purchase 100 artist assets'],
+  ['timetopray', 'Time to Pray', 'Purchase your first idol shrine asset'],
+  ['idolgoddess', 'Idol Goddess', 'Purchase 100 idol shrine assets'],
+  ['restbreak', 'Rest Break', 'Purchase your first themed cafe asset'],
+  ['caffeineaddiction', 'Caffeine Addiction', 'Purchase 100 themed cafe assets'],
+  ['nowsing', 'Now Sing!', 'Purchase your first karaoke bar asset'],
+  ['sorethroat', 'Sore Throat', 'Purchase 100 karaoke bar assets'],
+  ['howmayitakeyourorder', 'How May I Take Your Order', 'Purchase your first chain restaurant asset'],
+  ['franchising', 'Franchising', 'Purchase 100 chain restaurant assets'],
+  ['goinglong', 'Going Long', 'Purchase your first trading agency asset'],
+  ['marketcap', 'Market Cap', 'Purchase 100 trading agency assets'],
+  ['showbusiness', 'Show business', 'Purchase your first concert avenue asset'],
+  ['worldtour', 'World Tour', 'Purchase 100 concert avenue assets'],
+  ['justonemoreroll', 'Just One More Roll', 'Purchase your first gacha casino asset'],
+  ['icanstopanytime', 'I Can Stop Anytime', 'Purchase 100 gacha casino assets'],
+  ['idolbootcamp', 'Idol Boot camp', 'Purchase your first talent academy asset'],
+  ['newgeneration', 'New Generation', 'Purchase 100 talent academy assets'],
+  ['writteninstone', 'Written in Stone', 'Purchase your first holo museum asset'],
+  ['forthehistorybooks', 'For The History Books', 'Purchase 100 holo museum assets'],
+  ['admissionticket', 'Admission Ticket', 'Purchase your first theme park asset'],
+  ['waitinline', 'Wait In Line', 'Purchase 100 theme park assets'],
+  ['tropical', 'Tropical', 'Purchase your first luxury resort asset'],
+  ['fivestars', 'Five Stars', 'Purchase 100 luxury resort assets'],
+  ['truefervor', 'True Fervor', 'Purchase your first idol temple asset'],
+  ['technicallyareligion', 'Technically a Religion', 'Purchase 100 idol temple assets'],
+  ['andacrown', 'And A Crown', 'Purchase your first royal palace asset'],
+  ['globaldominion', 'Global Dominion', 'Purchase 100 royal palace assets'],
+  ['justpolitics', 'Just Politics', 'Purchase your first governmental ministry asset'],
+  ['worldruler', 'World Ruler', 'Purchase 100 governmental ministry assets'],
+  ['researchanddevelopment', 'Research and Development', 'Purchase your first research facility asset'],
+  ['bulkknowledge', 'Bulk Knowledge', 'Purchase 100 research facility assets'],
+  ['toinfinity', 'To Infinity', 'Purchase your first space colony asset'],
+  ['interstellar', 'Interstellar', 'Purchase 100 space colony assets'],
+  ['whatif', 'What If', 'Purchase your first multiverse device asset'],
+  ['isntoneenough', "Isn't One Enough", 'Purchase 100 multiverse device assets'],
+  ['shattereddream', 'Shattered Dream', 'Purchase your first statue of a dreamer asset'],
+  ['ironwill', 'Iron Will', 'Purchase 100 statue of a dreamer assets'],
+  ['sweetdreams', 'Sweet Dreams', 'Put your Idol to sleep for the first time'],
+  ['heavysleeper', 'Heavy Sleeper', 'Put your Idol to sleep 50 times'],
+  ['itadakimasu', 'Itadakimasu!', 'Cook food for your Idol for the first time'],
+  ['fullcourse', 'Full Course', 'Cook food for your Idol 50 times'],
+  ['stinky', 'Stinky', 'Give your Idol a bath for the first time'],
+  ['squeakyclean', 'Squeaky Clean', 'Give your Idol a bath 50 times'],
+  ['happytimes', 'Happy Times', 'Keep your Idol happy for a combined time of at least one hour'],
+  ['pettingsession', 'Petting Session', 'Pet your Idol in the head for a combined time of at least half an hour']
+];
 // Card data uses game-facing labels while the dashboard uses shorter names.
 const ASSET_NAME_TRANSLATIONS = new Map([
   ['Fan', 'Fans'], ['Prime Fan', 'Prime Fans'], ['Idol Shrine', 'Shrine'], ['Karaoke Bar', 'Karaoke'],
@@ -71,14 +148,22 @@ const search = document.querySelector('#search');
 const hint = document.querySelector('#board-hint');
 const saveFileInput = document.querySelector('#save-file');
 const importStatus = document.querySelector('#import-status');
+const rememberSaveInput = document.querySelector('#remember-save');
+const rememberSaveStatus = document.querySelector('#remember-save-status');
+const forgetSaveButton = document.querySelector('#forget-save');
 const copyPathStatus = document.querySelector('#copy-path-status');
 const assetDashboardRows = document.querySelector('#asset-dashboard-rows');
 const assetDashboardTotal = document.querySelector('#asset-dashboard-total');
 const assetDashboardNote = document.querySelector('#asset-dashboard-note');
 const assetDashboardCompare = document.querySelector('#asset-dashboard-compare');
+const achievementSearch = document.querySelector('#save-achievement-search');
+const achievementList = document.querySelector('#save-achievement-list');
+const achievementListStatus = document.querySelector('#save-achievement-list-status');
 const ownedFilter = document.querySelector('#owned-filter');
 const unownedFilter = document.querySelector('#unowned-filter');
 const ownershipNote = document.querySelector('#ownership-note');
+const optimizeOwnedButton = document.querySelector('#optimize-owned');
+const ownedSearchStatus = document.querySelector('#owned-search-status');
 const pageViews = new Map([...document.querySelectorAll('[data-page-view]')].map(view => [view.dataset.pageView, view]));
 const pageButtons = [...document.querySelectorAll('.page-tab[data-page]')];
 function setActivePage(page) {
@@ -114,11 +199,79 @@ let presets = loadPresets();
 let savePresets = [];
 let importedSave = null;
 let pendingSave = null;
+let rememberSaveEnabled = false;
+let restoredSaveOnStartup = false;
 let ownedCardCounts = new Map();
 let hasOwnedCardData = false;
 let ownershipFilter = 'all';
+let achievementFilter = 'all';
 let affectedAssetsNow = new Set();
 updateAffectedAssets(affectedAssetsNow);
+
+try {
+  const remembered = localStorage.getItem(SAVED_GAME_KEY);
+  if (remembered) {
+    const parsed = JSON.parse(remembered);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      importedSave = parsed;
+      pendingSave = parsed;
+      rememberSaveEnabled = true;
+      restoredSaveOnStartup = true;
+      rememberSaveInput.checked = true;
+      forgetSaveButton.hidden = false;
+      rememberSaveStatus.textContent = 'A saved copy is available on this device.';
+      importStatus.textContent = 'Restoring your remembered save…';
+    }
+  }
+} catch {
+  rememberSaveStatus.textContent = 'Could not read the saved browser copy.';
+  forgetSaveButton.hidden = false;
+}
+
+function storeImportedSave(save) {
+  try {
+    localStorage.setItem(SAVED_GAME_KEY, JSON.stringify(save));
+    rememberSaveEnabled = true;
+    rememberSaveInput.checked = true;
+    forgetSaveButton.hidden = false;
+    rememberSaveStatus.textContent = 'Saved in this browser on this device.';
+    return true;
+  } catch {
+    rememberSaveEnabled = false;
+    rememberSaveInput.checked = false;
+    try { localStorage.removeItem(SAVED_GAME_KEY); } catch { /* storage is unavailable */ }
+    forgetSaveButton.hidden = true;
+    rememberSaveStatus.textContent = 'Could not store the save; browser storage may be full or unavailable.';
+    return false;
+  }
+}
+
+function forgetImportedSave(status = 'Not stored in browser storage.') {
+  try {
+    localStorage.removeItem(SAVED_GAME_KEY);
+    rememberSaveStatus.textContent = status;
+    forgetSaveButton.hidden = true;
+  } catch {
+    rememberSaveStatus.textContent = 'Could not remove the saved browser copy.';
+    forgetSaveButton.hidden = false;
+  }
+}
+
+rememberSaveInput.addEventListener('change', () => {
+  rememberSaveEnabled = rememberSaveInput.checked;
+  if (!rememberSaveEnabled) {
+    forgetImportedSave();
+  } else if (importedSave) {
+    storeImportedSave(importedSave);
+  } else {
+    rememberSaveStatus.textContent = 'The next imported save will be stored on this device.';
+  }
+});
+forgetSaveButton.addEventListener('click', () => {
+  rememberSaveEnabled = false;
+  rememberSaveInput.checked = false;
+  forgetImportedSave('Saved copy removed. The current import remains available until you leave or reload this page.');
+});
 
 function loadPlacements() {
   try {
@@ -153,6 +306,34 @@ function renderPresets() {
   picker.innerHTML = `<option value="">Choose preset…</option>${localOptions ? `<optgroup label="This browser">${localOptions}</optgroup>` : ''}${saveOptions ? `<optgroup label="Imported save.holo">${saveOptions}</optgroup>` : ''}`;
   if (selected && picker.querySelector(`option[value="${selected}"]`)) picker.value = selected;
   document.querySelector('#delete-preset').disabled = !picker.value.startsWith('local:');
+}
+
+function encodeSharedLayout() {
+  const payload = JSON.stringify({ v: 1, p: placements, f: [...foilIds] });
+  const bytes = new TextEncoder().encode(payload);
+  const binary = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+  return `HCB1:${btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`;
+}
+
+function decodeSharedLayout(code) {
+  const match = /^HCB1:([A-Za-z0-9_-]+)$/.exec(code.trim());
+  if (!match) throw new Error('That code is not a supported board layout.');
+  const base64 = match[1].replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - match[1].length % 4) % 4);
+  let payload;
+  try {
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    payload = JSON.parse(new TextDecoder().decode(bytes));
+  } catch { throw new Error('The layout code is damaged or incomplete.'); }
+  if (!payload || payload.v !== 1 || !Array.isArray(payload.p) || payload.p.length !== 8 || !Array.isArray(payload.f)) {
+    throw new Error('The layout code has an unsupported format.');
+  }
+  const validIds = new Set(cards.map(card => card.ID));
+  if (payload.p.some(id => id !== null && (!Number.isInteger(id) || !validIds.has(id)))) throw new Error('The layout includes a card ID not found in this card catalog.');
+  const placed = payload.p.filter(id => id !== null);
+  if (new Set(placed).size !== placed.length) throw new Error('The layout places the same card more than once.');
+  if (payload.f.some(id => !Number.isInteger(id) || !validIds.has(id))) throw new Error('The layout includes an invalid foil card ID.');
+  return { placements: payload.p, foilIds: [...new Set(payload.f)] };
 }
 
 function parseCsvLine(line) {
@@ -192,7 +373,153 @@ function formatLargeNumber(value) {
   return suffixIndex ? `${sign}${rounded} ${suffixes[suffixIndex]}` : `${sign}${rounded}`;
 }
 
+function renderSaveHighlights(save) {
+  const encores = Number(save?.rebirthCount);
+  const hasEncoreCount = Number.isFinite(encores) && Number.isInteger(encores);
+  document.querySelector('#save-encore-count').textContent = hasEncoreCount ? Math.max(0, encores - 1).toLocaleString() : '—';
+  document.querySelector('#save-encore-note').textContent = hasEncoreCount ? `Rebirth count ${encores.toLocaleString()} in save` : 'Encore count is not recorded in this save.';
+
+  const progress = document.querySelector('#save-achievement-progress');
+  const meter = document.querySelector('#save-achievement-meter');
+  const note = document.querySelector('#save-achievement-note');
+  const unlocked = Array.isArray(save?.unlockedAchievements) ? save.unlockedAchievements : null;
+  if (!unlocked) {
+    progress.textContent = save ? 'NO DATA' : '—';
+    meter.value = 0;
+    meter.max = GAME_ACHIEVEMENTS.length;
+    note.textContent = save ? 'This save has no unlockedAchievements list.' : 'Achievement data appears here after importing a save.';
+    renderAchievementList(save);
+    return;
+  }
+  const ids = new Set(unlocked.filter(id => typeof id === 'string'));
+  const achievementIds = new Set(GAME_ACHIEVEMENTS.map(([id]) => id));
+  const count = [...ids].filter(id => achievementIds.has(id)).length;
+  const unknown = [...ids].filter(id => !achievementIds.has(id)).length;
+  meter.max = GAME_ACHIEVEMENTS.length;
+  meter.value = count;
+  progress.textContent = `${count} / ${GAME_ACHIEVEMENTS.length}`;
+  note.textContent = `${Math.round(count * 100 / GAME_ACHIEVEMENTS.length)}% marked unlocked in save. Goals below are from the game's achievement list.${unknown ? ` ${unknown} unrecognized achievement ID${unknown === 1 ? '' : 's'} ignored.` : ''}`;
+  renderAchievementList(save);
+}
+
+function renderAchievementList(save) {
+  const unlocked = Array.isArray(save?.unlockedAchievements)
+    ? new Set(save.unlockedAchievements.filter(id => typeof id === 'string'))
+    : null;
+  const filterButtons = [...document.querySelectorAll('[data-achievement-filter]')];
+  filterButtons.forEach(button => {
+    button.disabled = !unlocked;
+    button.classList.toggle('active', button.dataset.achievementFilter === achievementFilter);
+    button.setAttribute('aria-pressed', String(button.dataset.achievementFilter === achievementFilter));
+  });
+  achievementSearch.disabled = !unlocked;
+  if (!unlocked) {
+    achievementList.innerHTML = '';
+    achievementListStatus.textContent = save ? 'This save has no achievement progress data.' : 'Import a save to see achievement progress and goals.';
+    return;
+  }
+  const query = achievementSearch.value.trim().toLowerCase();
+  const visible = GAME_ACHIEVEMENTS.filter(([id, name, goal]) => {
+    const isUnlocked = unlocked.has(id);
+    return (achievementFilter === 'all' || (achievementFilter === 'unlocked' ? isUnlocked : !isUnlocked))
+      && `${name} ${goal} ${id}`.toLowerCase().includes(query);
+  });
+  achievementList.innerHTML = visible.map(([id, name, goal]) => {
+    const isUnlocked = unlocked.has(id);
+    const progress = getAchievementProgress(id, save, isUnlocked);
+    const progressText = progress ? `${formatAchievementValue(progress.current, progress.unit)} / ${formatAchievementValue(progress.goal, progress.unit)}` : 'Progress data unavailable in save';
+    const percent = progress ? Math.min(100, Math.max(0, progress.current / progress.goal * 100)) : 0;
+    return `<article class="achievement-entry ${isUnlocked ? 'unlocked' : 'locked'}"><span class="achievement-state">${isUnlocked ? 'UNLOCKED' : 'LOCKED'}</span><h3>${safe(name)}</h3><p class="achievement-goal">${safe(goal)}</p><div class="achievement-progress"><span>${safe(progressText)}</span>${progress ? `<progress max="100" value="${percent}" aria-label="${safe(name)} progress"></progress>` : ''}</div></article>`;
+  }).join('');
+  achievementListStatus.textContent = `${visible.length} of ${GAME_ACHIEVEMENTS.length} achievements shown · unlocked state and goals are read from the save and game files.`;
+}
+
+function formatAchievementValue(value, unit) {
+  if (unit === 'IpS') return `${formatLargeNumber(value)} IpS`;
+  if (unit === 'time') {
+    const seconds = Math.max(0, Math.floor(value));
+    const hours = Math.floor(seconds / 3600), minutes = Math.floor((seconds % 3600) / 60), remainder = seconds % 60;
+    return hours ? `${hours}h ${minutes}m` : minutes ? `${minutes}m ${remainder}s` : `${remainder}s`;
+  }
+  const rounded = Number.isInteger(value) ? value : Number(value.toFixed(1));
+  return `${rounded.toLocaleString()}${unit ? ` ${unit}` : ''}`;
+}
+
+function getAchievementProgress(id, save, isUnlocked) {
+  const number = key => {
+    const value = Number(save?.[key]);
+    return Number.isFinite(value) ? Math.max(0, value) : null;
+  };
+  const count = (key, target, unit = '') => {
+    const current = number(key);
+    return current === null ? null : { current, goal: target, unit };
+  };
+  const cardsOwned = Array.isArray(save?.collabsOwned) ? save.collabsOwned.map(Number).filter(value => Number.isInteger(value) && value > 0) : null;
+  const uniqueCards = cardsOwned ? new Set(cardsOwned).size : null;
+  const cardCopies = cardsOwned ? new Map() : null;
+  cardsOwned?.forEach(id => cardCopies.set(id, (cardCopies.get(id) || 0) + 1));
+  const foilCards = cardCopies && cards.length ? [...cardCopies].filter(([id, copies]) => copies >= 10 && id <= cards.length).length : null;
+  const assets = Array.isArray(save?.assetsOwned) ? save.assetsOwned : null;
+  const assetAt = id => assets?.find((asset, index) => Number(asset?.id ?? index) === id);
+  const upgradeIds = assets ? new Set(assets.flatMap(asset => Array.isArray(asset?.assetUpgradesOwned) ? asset.assetUpgradesOwned.map(Number).filter(Number.isInteger) : [])) : null;
+  const upgradedAssets = assets ? assets.filter(asset => Array.isArray(asset?.assetUpgradesOwned) && asset.assetUpgradesOwned.length > 0).length : null;
+  const unlocks = Array.isArray(save?.unlocksOwned) ? new Set(save.unlocksOwned.filter(item => item?.purchased !== false).map(item => Number(item?.id)).filter(Number.isInteger)) : null;
+  const unlockGroupSizes = [3, 4, 4, 4, 4, 3, 1, 4, 1, 3];
+  let unlockOffset = 0;
+  const completeUnlockGroups = unlocks ? unlockGroupSizes.filter(size => {
+    const complete = Array.from({ length: size }, (_, index) => unlockOffset + index).every(unlockId => unlocks.has(unlockId));
+    unlockOffset += size;
+    return complete;
+  }).length : null;
+  const furnitureCount = Array.isArray(save?.furnitureOwned) ? save.furnitureOwned.length : null;
+  const progress = (current, goal, unit = '') => current === null ? null : ({ current, goal, unit });
+  const achievement = (current, goal, unit = '') => progress(current, goal, unit);
+  const assetProgress = (assetId, goal) => {
+    const record = assetAt(assetId);
+    return record ? achievement(Math.max(0, Number(record.owned) || 0), goal, 'assets') : null;
+  };
+
+  if (id === 'freshstart') return achievement(isUnlocked ? 1 : 0, 1, 'completion');
+  if (id === 'cardenthusiast') return achievement(uniqueCards, 10, 'cards');
+  if (id === 'cardcollector') return achievement(uniqueCards, 50, 'cards');
+  if (id === 'cardspecialist') return achievement(uniqueCards, 100, 'cards');
+  if (id === 'shinythings') return foilCards === null ? null : achievement(foilCards, 1, 'foil cards');
+  if (id === 'treasurepile') return foilCards === null ? null : achievement(foilCards, 20, 'foil cards');
+  if (id === 'completecollection') return foilCards === null ? null : achievement(foilCards, 100, 'foil cards');
+  if (id === 'newlife') return achievement(number('rebirthCount') === null ? null : Math.max(0, number('rebirthCount') - 1), 1, 'Encores');
+  if (id === 'backagain') return number('rebirthCount') === null ? null : achievement(Math.max(0, number('rebirthCount') - 1), 9, 'Encores');
+  if (id === 'closedforrenovations') return furnitureCount === null ? null : achievement(furnitureCount, 16, 'furniture items');
+  if (id === 'feelslikehome') return furnitureCount === null ? null : achievement(furnitureCount, 52, 'furniture items');
+  if (id === 'upgradetime') return upgradeIds === null ? null : achievement(upgradeIds.size, 1, 'upgrades');
+  if (id === 'allin') return upgradedAssets === null ? null : achievement(upgradedAssets, ASSET_DATA.length, 'assets upgraded');
+  if (id === 'lockedin') return unlocks === null ? null : achievement(unlocks.size, 1, 'unlocks');
+  if (id === 'maximumefficiency') return completeUnlockGroups === null ? null : achievement(completeUnlockGroups, unlockGroupSizes.length, 'unlock groups');
+  const ipsGoals = { startingout: 1e3, trueicon: 1e5, nowweareidling: 1e6, waithowmanyzeros: 1e9, cantcountthathigh: 1e12, thatsalot: 1e15, nowthatsjustsilly: 1e18 };
+  if (ipsGoals[id]) return progress(number('influencePerSecond'), ipsGoals[id], 'IpS');
+  if (id === 'banhammer') return count('accountBannedTrolls', 1, 'trolls banned');
+  if (id === 'hammerofjustice') return count('accountBannedTrolls', 20, 'trolls banned');
+  const assetGoals = {
+    fantastic: [0, 1], idolarmy: [0, 100], fanfavorite: [1, 1], primetime: [1, 100], artistictouch: [2, 1], artgallery: [2, 100],
+    timetopray: [3, 1], idolgoddess: [3, 100], restbreak: [4, 1], caffeineaddiction: [4, 100], nowsing: [5, 1], sorethroat: [5, 100],
+    howmayitakeyourorder: [6, 1], franchising: [6, 100], goinglong: [7, 1], marketcap: [7, 100], showbusiness: [8, 1], worldtour: [8, 100],
+    justonemoreroll: [9, 1], icanstopanytime: [9, 100], idolbootcamp: [10, 1], newgeneration: [10, 100], writteninstone: [11, 1], forthehistorybooks: [11, 100],
+    admissionticket: [12, 1], waitinline: [12, 100], tropical: [13, 1], fivestars: [13, 100], truefervor: [14, 1], technicallyareligion: [14, 100],
+    andacrown: [15, 1], globaldominion: [15, 100], justpolitics: [16, 1], worldruler: [16, 100], researchanddevelopment: [17, 1], bulkknowledge: [17, 100],
+    toinfinity: [18, 1], interstellar: [18, 100], whatif: [19, 1], isntoneenough: [19, 100], shattereddream: [20, 1], ironwill: [20, 100]
+  };
+  if (assetGoals[id]) return assetProgress(...assetGoals[id]);
+  const activityGoals = {
+    sweetdreams: ['accountSleep', 1, 'times slept'], heavysleeper: ['accountSleep', 50, 'times slept'],
+    itadakimasu: ['accountCooked', 1, 'meals cooked'], fullcourse: ['accountCooked', 50, 'meals cooked'],
+    stinky: ['accountBath', 1, 'baths'], squeakyclean: ['accountBath', 50, 'baths'],
+    happytimes: ['accountHappyPetTimer', 3600, 'time'], pettingsession: ['accountPettingTimer', 1800, 'time']
+  };
+  if (activityGoals[id]) return count(...activityGoals[id]);
+  return null;
+}
+
 function renderAssetDashboard(save = importedSave) {
+  renderSaveHighlights(save);
   if (!save || !Array.isArray(save.assetsOwned)) {
     assetDashboardTotal.textContent = save ? 'NO ASSET DATA' : 'WAITING FOR SAVE';
     assetDashboardRows.innerHTML = '';
@@ -398,6 +725,104 @@ function hasDirectionalLoop() {
   return false;
 }
 
+function scoreOwnedLayout(layout) {
+  const previousPlacements = placements;
+  placements = layout;
+  try {
+    if (hasDirectionalLoop()) return -Infinity;
+    const effects = calculateBoardEffects();
+    const assetBonuses = new Map();
+    const affectionBonuses = new Map();
+    const ownedAssets = importedSave && Array.isArray(importedSave.assetsOwned) ? importedSave.assetsOwned : [];
+    const ownedCount = name => {
+      const canonical = canonicalAssetName(name);
+      const asset = ASSET_DATA.find(item => item.name === canonical);
+      return asset ? Math.max(0, Number(ownedAssets[asset.id]?.owned) || 0) : 0;
+    };
+    layout.forEach(id => {
+      if (id === null) return;
+      const card = cards.find(item => item.ID === id);
+      if (!card) return;
+      const assets = affectedAssetNames(card);
+      if (!assets.length) return;
+      const value = effects.get(id)?.regular ?? 0;
+      if (!card.SecondaryAsset || card.SecondaryAsset === 'None') {
+        assets.forEach(asset => assetBonuses.set(asset, (assetBonuses.get(asset) || 0) + value));
+      } else {
+        const affection = value * Math.floor(ownedCount(card.SecondaryAsset) / 10);
+        assets.forEach(asset => affectionBonuses.set(asset, affection));
+      }
+    });
+    return [...assetBonuses.values(), ...affectionBonuses.values()].reduce((sum, value) => sum + value, 0);
+  } finally {
+    placements = previousPlacements;
+  }
+}
+
+function randomOwnedLayout(candidateIds) {
+  const pool = [...candidateIds];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const layout = Array(8).fill(null);
+  const slotOrder = Array.from({ length: 8 }, (_, index) => index);
+  for (let i = slotOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [slotOrder[i], slotOrder[j]] = [slotOrder[j], slotOrder[i]];
+  }
+  pool.slice(0, 8).forEach((id, index) => { layout[slotOrder[index]] = id; });
+  return layout;
+}
+
+function findBestOwnedLayout() {
+  const candidates = cards.filter(card => (ownedCardCounts.get(card.ID) || 0) > 0).map(card => card.ID);
+  if (!candidates.length) return null;
+  let bestLayout = Array(8).fill(null);
+  let bestScore = 0;
+  if (placements.every(id => id === null || candidates.includes(id))) {
+    const currentScore = scoreOwnedLayout(placements);
+    if (currentScore > bestScore) { bestScore = currentScore; bestLayout = [...placements]; }
+  }
+
+  for (let restart = 0; restart < 4; restart++) {
+    let layout = randomOwnedLayout(candidates);
+    let score = scoreOwnedLayout(layout);
+    if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
+    for (let round = 0; round < 4; round++) {
+      let nextLayout = null;
+      let nextScore = score;
+      for (let slot = 0; slot < 8; slot++) {
+        const previousId = layout[slot];
+        if (previousId !== null) {
+          layout[slot] = null;
+          const removedScore = scoreOwnedLayout(layout);
+          if (removedScore > nextScore) { nextScore = removedScore; nextLayout = [...layout]; }
+        }
+        for (const id of candidates) {
+          if (id === previousId || layout.includes(id)) continue;
+          layout[slot] = id;
+          const candidateScore = scoreOwnedLayout(layout);
+          if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
+        }
+        layout[slot] = previousId;
+      }
+      for (let left = 0; left < 8; left++) for (let right = left + 1; right < 8; right++) {
+        if (layout[left] === layout[right]) continue;
+        [layout[left], layout[right]] = [layout[right], layout[left]];
+        const candidateScore = scoreOwnedLayout(layout);
+        if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
+        [layout[left], layout[right]] = [layout[right], layout[left]];
+      }
+      if (!nextLayout) break;
+      layout = nextLayout;
+      score = nextScore;
+      if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
+    }
+  }
+  return bestScore > 0 ? { layout: bestLayout, score: bestScore, candidateCount: candidates.length } : null;
+}
+
 function updateAffectedAssets(names) {
   affectedAssetsNow = new Set(names);
   document.querySelectorAll('[data-asset-name]').forEach(row => {
@@ -525,6 +950,10 @@ function renderCollection() {
   unownedFilter.classList.toggle('active', ownershipFilter === 'unowned');
   ownedFilter.setAttribute('aria-pressed', String(ownershipFilter === 'owned'));
   unownedFilter.setAttribute('aria-pressed', String(ownershipFilter === 'unowned'));
+  const ownedCount = [...ownedCardCounts.values()].filter(count => count > 0).length;
+  optimizeOwnedButton.disabled = !hasOwnedCardData || ownedCount === 0;
+  if (!hasOwnedCardData) ownedSearchStatus.textContent = 'Import a save to search layouts using your cards.';
+  else if (ownedCount === 0) ownedSearchStatus.textContent = 'No owned collab cards were found in this save.';
   const ownedKinds = [...ownedCardCounts.values()].filter(count => count > 0).length;
   document.querySelector('#card-total').textContent = hasOwnedCardData ? `${ownedKinds} OWNED · ${cards.length} CARDS` : `${cards.length} CARDS`;
   const copyTotal = [...ownedCardCounts.values()].reduce((sum, count) => sum + count, 0);
@@ -612,7 +1041,10 @@ saveFileInput.addEventListener('change', async () => {
   importStatus.textContent = 'Reading save locally…';
   try {
     const save = await decodeSaveFile(file);
+    restoredSaveOnStartup = false;
     importedSave = save;
+    if (rememberSaveEnabled) storeImportedSave(save);
+    else forgetImportedSave();
     renderAssetDashboard(save);
     renderHoloscope(save);
     if (!cards.length) {
@@ -706,6 +1138,13 @@ document.querySelector('#filters').addEventListener('click', event => {
   document.querySelectorAll('.filter').forEach(filter => filter.classList.toggle('active', filter === button));
   renderCollection();
 });
+achievementSearch.addEventListener('input', () => renderAchievementList(importedSave));
+document.querySelector('.achievement-toolbar .filters').addEventListener('click', event => {
+  const button = event.target.closest('[data-achievement-filter]');
+  if (!button || button.disabled) return;
+  achievementFilter = button.dataset.achievementFilter;
+  renderAchievementList(importedSave);
+});
 document.querySelector('#direction-filters').addEventListener('click', event => {
   const button = event.target.closest('[data-direction]');
   if (!button) return;
@@ -717,6 +1156,60 @@ document.querySelector('#clear-board').addEventListener('click', () => {
   placements = Array(8).fill(null);
   selectedId = null;
   saveAndRender();
+});
+optimizeOwnedButton.addEventListener('click', async () => {
+  optimizeOwnedButton.disabled = true;
+  optimizeOwnedButton.textContent = 'Searching…';
+  ownedSearchStatus.textContent = 'Searching owned layouts for higher estimated asset bonuses…';
+  await new Promise(resolve => window.setTimeout(resolve, 0));
+  try {
+    const result = findBestOwnedLayout();
+    if (!result) {
+      ownedSearchStatus.textContent = 'No positive, loop-free owned layout was found. The board was left unchanged.';
+      return;
+    }
+    placements = result.layout;
+    selectedId = null;
+    saveAndRender();
+    ownedSearchStatus.textContent = `Best layout found from ${result.candidateCount} owned cards · estimated aggregate bonus ${formatLargeNumber(result.score)} percentage points. This is a heuristic search.`;
+  } catch (error) {
+    ownedSearchStatus.textContent = `Layout search failed: ${error.message || 'unexpected error'}`;
+  } finally {
+    optimizeOwnedButton.textContent = 'Find best owned layout';
+    optimizeOwnedButton.disabled = !hasOwnedCardData || ![...ownedCardCounts.values()].some(count => count > 0);
+  }
+});
+document.querySelector('#copy-share-code').addEventListener('click', async () => {
+  const input = document.querySelector('#share-code');
+  const status = document.querySelector('#share-status');
+  input.value = encodeSharedLayout();
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(input.value);
+    else {
+      input.focus();
+      input.select();
+      if (!document.execCommand('copy')) throw new Error('Clipboard unavailable');
+    }
+    status.textContent = 'Layout code copied. Paste it to share this board.';
+  } catch {
+    input.focus();
+    input.select();
+    status.textContent = 'Code generated. Copy the selected text to share it.';
+  }
+});
+document.querySelector('#load-share-code').addEventListener('click', () => {
+  const status = document.querySelector('#share-status');
+  if (!cards.length) { status.textContent = 'Wait for the card catalog to load, then try again.'; return; }
+  try {
+    const layout = decodeSharedLayout(document.querySelector('#share-code').value);
+    placements = layout.placements;
+    foilIds = new Set(layout.foilIds);
+    selectedId = null;
+    saveAndRender();
+    status.textContent = 'Shared layout loaded.';
+  } catch (error) {
+    status.textContent = error.message;
+  }
 });
 document.querySelector('#board-presets').addEventListener('change', event => {
   const [source, rawIndex] = event.target.value.split(':');
@@ -753,7 +1246,8 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && selectedId !== null) { selectedId = null; renderCollection(); updateHint(); }
 });
 
-renderHoloscope();
+renderAssetDashboard(importedSave);
+renderHoloscope(importedSave);
 fetch(CARD_FILE).then(response => {
   if (!response.ok) throw new Error('Card data could not be loaded.');
   return response.text();
@@ -772,7 +1266,10 @@ fetch(CARD_FILE).then(response => {
     pendingSave = null;
     try {
       const count = importCardSetup(save);
-      importStatus.textContent = `Loaded ${count} equipped card${count === 1 ? '' : 's'}; foil inferred from owned copies.`;
+      importStatus.textContent = restoredSaveOnStartup
+        ? `Restored remembered save · ${count} equipped card${count === 1 ? '' : 's'}.`
+        : `Loaded ${count} equipped card${count === 1 ? '' : 's'}; foil inferred from owned copies.`;
+      restoredSaveOnStartup = false;
     } catch (error) {
       importStatus.textContent = `Assets loaded; card board import failed: ${error.message || 'unexpected save structure'}`;
     }

@@ -9,9 +9,15 @@ An experimental, community made browser tool for exploring Holoidle collab card 
 - Simulate foil cards and filter the collection by ownership after importing a save.
 - Apply imported Holoscope group, direction, and Add bonuses to card effects.
 - Review Holoscope power, saved star ranks, and effective ranks in a dedicated view.
-- Import a `save.holo` file or plaintext JSON to view equipped cards, ownership, and the Assets dashboard. The file is read in the browser and is not uploaded or modified.
+- Import a `save.holo` file or plaintext JSON to view equipped cards, ownership, and the Assets dashboard. The file is read in the browser and is not uploaded or modified; you can optionally remember the parsed save in this browser.
 - Keep the current board and foil selections in this browser's local storage.
 - Load saved card layouts from an imported `save.holo` file, alongside named presets saved in this browser.
+- Copy and load versioned text codes that share board placements and foil selections.
+- Optionally restore an imported save from this browser's local storage, or forget its saved copy.
+- Search owned cards for a high-scoring, loop-free board layout using estimated aggregate asset bonuses.
+- View completed Encores and Steam-linked achievement progress recorded in the imported save.
+- Search and filter all 74 achievements, with current-versus-goal counts derived from save fields and goal text from the game definitions.
+- Manage save imports, on-device storage, and save-file location details from the dedicated Save page.
 
 ## Run locally
 
