@@ -140,6 +140,18 @@ function affectedAssetLine(card) {
   const names = affectedAssetNames(card);
   return names.length ? `<span class="card-assets">Assets: ${safe(names.join(' · '))}</span>` : '';
 }
+function secondaryAssetCalculation(card, percentage) {
+  if (!importedSave || !card.SecondaryAsset || card.SecondaryAsset === 'None') return '';
+  const source = canonicalAssetName(card.SecondaryAsset);
+  const targets = affectedAssetNames(card);
+  if (!source || !targets.length) return '';
+  const sourceIndex = ASSET_DATA.findIndex(asset => asset.name === source);
+  const owned = Math.max(0, Number(importedSave.assetsOwned?.[sourceIndex]?.owned) || 0);
+  const groupsOfTen = Math.floor(owned / 10);
+  const perGroup = formatEffect('Add', percentage);
+  const total = formatEffect('Add', percentage * groupsOfTen);
+  return `<span class="secondary-asset-calculation">${safe(source)}: ${formatLargeNumber(owned)} owned → ${groupsOfTen} × ${perGroup}% = ${total}% ${safe(targets.join(' · '))}</span>`;
+}
 const PRIME_UPGRADE_TARGETS = new Map([[18, 2], [19, 3], [20, 4], [23, 5], [25, 6], [26, 7], [28, 8], [29, 9], [31, 10], [32, 11], [33, 12], [35, 13], [36, 14], [37, 15], [39, 16], [41, 17], [42, 18], [44, 19], [45, 20]]);
 const FAN_UPGRADE_PER_ASSET = new Map([[3, 0.1], [4, 0.5], [5, 5], [6, 100], [7, 2000], [8, 40000], [9, 800000], [10, 16000000], [11, 320000000], [12, 6400000000], [13, 128000000000], [14, 2560000000000]]);
 const board = document.querySelector('#board');
@@ -810,67 +822,88 @@ function scoreOwnedLayout(layout, assetStates, targetName) {
     .reduce((sum, asset) => sum + asset.cardContribution, 0);
 }
 
-function randomOwnedLayout(candidateIds, limits = ownedLayoutLimits()) {
-  const pool = [...candidateIds];
-  for (let i = pool.length - 1; i > 0; i--) {
+function shuffled(values) {
+  const result = [...values];
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
+    [result[i], result[j]] = [result[j], result[i]];
   }
-  const layout = Array(8).fill(null);
-  const slotOrder = [...limits.slots];
-  for (let i = slotOrder.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [slotOrder[i], slotOrder[j]] = [slotOrder[j], slotOrder[i]];
+  return result;
+}
+
+function randomOwnedLayout(candidateIds, limits = ownedLayoutLimits(), cardCount = Math.min(candidateIds.length, limits.slots.length)) {
+  const requestedCount = Math.min(cardCount, candidateIds.length, limits.slots.length);
+  if (!requestedCount) return Array(8).fill(null);
+
+  // Build a valid board before scoring it. Starting from a looped full board
+  // made the old score-only hill climb remove cards to escape the loop.
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const layout = Array(8).fill(null);
+    const slotOrder = shuffled(limits.slots).slice(0, requestedCount);
+    let visitedNodes = 0;
+    const place = (position, availableIds) => {
+      if (position === slotOrder.length) return true;
+      if (visitedNodes++ >= 4000) return false;
+      const slot = slotOrder[position];
+      for (const id of shuffled(availableIds)) {
+        layout[slot] = id;
+        if (!hasDirectionalLoop(layout) && place(position + 1, availableIds.filter(candidate => candidate !== id))) return true;
+        layout[slot] = null;
+      }
+      return false;
+    };
+    if (place(0, shuffled(candidateIds))) return layout;
   }
-  pool.slice(0, slotOrder.length).forEach((id, index) => { layout[slotOrder[index]] = id; });
-  return layout;
+  return null;
 }
 
 function searchOwnedLayouts(limits, candidates, assetStates, targetName) {
-  let bestLayout = Array(8).fill(null);
-  let bestScore = 0;
-  if (isAllowedOwnedLayout(placements, limits) && placements.every(id => id === null || candidates.includes(id))) {
-    const currentScore = scoreOwnedLayout(placements, assetStates, targetName);
-    if (currentScore > bestScore) { bestScore = currentScore; bestLayout = [...placements]; }
-  }
+  const maximumCards = Math.min(candidates.length, limits.slots.length);
+  for (let cardCount = maximumCards; cardCount > 0; cardCount--) {
+    let bestLayout = null;
+    let bestScore = -Infinity;
+    const placementCount = placements.filter(id => id !== null).length;
+    if (placementCount === cardCount && isAllowedOwnedLayout(placements, limits) && placements.every(id => id === null || candidates.includes(id)) && !hasDirectionalLoop(placements)) {
+      const currentScore = scoreOwnedLayout(placements, assetStates, targetName);
+      if (currentScore > bestScore) { bestScore = currentScore; bestLayout = [...placements]; }
+    }
 
-  for (let restart = 0; restart < 4; restart++) {
-    let layout = randomOwnedLayout(candidates, limits);
-    let score = scoreOwnedLayout(layout, assetStates, targetName);
-    if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
-    for (let round = 0; round < 4; round++) {
-      let nextLayout = null;
-      let nextScore = score;
-      for (const slot of limits.slots) {
-        const previousId = layout[slot];
-        if (previousId !== null) {
-          layout[slot] = null;
-          const removedScore = scoreOwnedLayout(layout, assetStates, targetName);
-          if (removedScore > nextScore) { nextScore = removedScore; nextLayout = [...layout]; }
+    for (let restart = 0; restart < 12; restart++) {
+      let layout = randomOwnedLayout(candidates, limits, cardCount);
+      if (!layout) continue;
+      let score = scoreOwnedLayout(layout, assetStates, targetName);
+      if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
+      for (let round = 0; round < 6; round++) {
+        let nextLayout = null;
+        let nextScore = score;
+        for (const slot of limits.slots) {
+          const previousId = layout[slot];
+          if (previousId === null) continue;
+          for (const id of candidates) {
+            if (id === previousId || layout.includes(id)) continue;
+            layout[slot] = id;
+            const candidateScore = scoreOwnedLayout(layout, assetStates, targetName);
+            if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
+          }
+          layout[slot] = previousId;
         }
-        for (const id of candidates) {
-          if (id === previousId || layout.includes(id)) continue;
-          layout[slot] = id;
+        for (let leftPosition = 0; leftPosition < limits.slots.length; leftPosition++) for (let rightPosition = leftPosition + 1; rightPosition < limits.slots.length; rightPosition++) {
+          const left = limits.slots[leftPosition], right = limits.slots[rightPosition];
+          if (layout[left] === null || layout[right] === null || layout[left] === layout[right]) continue;
+          [layout[left], layout[right]] = [layout[right], layout[left]];
           const candidateScore = scoreOwnedLayout(layout, assetStates, targetName);
           if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
+          [layout[left], layout[right]] = [layout[right], layout[left]];
         }
-        layout[slot] = previousId;
+        if (!nextLayout) break;
+        layout = nextLayout;
+        score = nextScore;
+        if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
       }
-      for (let leftPosition = 0; leftPosition < limits.slots.length; leftPosition++) for (let rightPosition = leftPosition + 1; rightPosition < limits.slots.length; rightPosition++) {
-        const left = limits.slots[leftPosition], right = limits.slots[rightPosition];
-        if (layout[left] === layout[right]) continue;
-        [layout[left], layout[right]] = [layout[right], layout[left]];
-        const candidateScore = scoreOwnedLayout(layout, assetStates, targetName);
-        if (candidateScore > nextScore) { nextScore = candidateScore; nextLayout = [...layout]; }
-        [layout[left], layout[right]] = [layout[right], layout[left]];
-      }
-      if (!nextLayout) break;
-      layout = nextLayout;
-      score = nextScore;
-      if (score > bestScore) { bestScore = score; bestLayout = [...layout]; }
     }
+    if (bestLayout) return { layout: bestLayout, score: bestScore, cardCount, maximumCards };
   }
-  return { layout: bestLayout, score: bestScore };
+  return null;
 }
 
 function findBestOwnedLayout() {
@@ -881,8 +914,8 @@ function findBestOwnedLayout() {
   const candidates = cards.filter(card => (ownedCardCounts.get(card.ID) || 0) > 0 && card.Tier <= limits.tier).map(card => card.ID);
   if (!candidates.length) return null;
   const focused = searchOwnedLayouts(limits, candidates, assetStates, target?.name);
-  const result = target && focused.score <= 0 ? searchOwnedLayouts(limits, candidates, assetStates, null) : focused;
-  return result.score > 0 ? { ...result, candidateCount: candidates.length, limits, target, usedOverallFallback: Boolean(target && focused.score <= 0) } : null;
+  const result = target && (!focused || focused.score <= 0) ? searchOwnedLayouts(limits, candidates, assetStates, null) : focused;
+  return result && result.score > 0 ? { ...result, candidateCount: candidates.length, limits, target, usedOverallFallback: Boolean(target && focused && focused.score <= 0) } : null;
 }
 
 function updateAffectedAssets(names) {
@@ -983,7 +1016,8 @@ function renderBoard() {
     const copies = ownedCardCounts.get(card.ID) || 0;
     const ownershipBadge = hasOwnedCardData ? `<span class="ownership-badge ${copies ? 'owned' : 'unowned'}">${copies ? `OWNED ×${copies}` : 'NOT OWNED'}</span>` : '';
     const multiplier = isFoil ? 2 : 1;
-    return `<div class="slot filled" data-slot="${index}" role="group" aria-label="${safe(card.Name)}, slot ${position}${hasOwnedCardData ? copies ? `, owned ${copies}` : ', not owned' : ''}"><span class="board-card${isFoil ? ' foil-card' : ''}"><span class="card-top"><span class="card-tier">TIER ${tierNames[card.Tier]}</span><span class="board-card-tools">${ownershipBadge}<span class="card-id">#${String(card.ID).padStart(3, '0')}</span><label class="foil-control" data-foil-control title="${isFoil ? 'Foil effect values are doubled' : 'Mark this card as foil'}"><input type="checkbox" data-foil="${card.ID}" ${isFoil ? 'checked' : ''} aria-label="Mark ${safe(card.Name)} as foil"><span>FOIL ×2</span></label><button class="remove-card" data-remove-slot="${index}" aria-label="Remove ${safe(card.Name)}">×</button></span></span><span class="card-name">${safe(card.Name)}</span><span class="card-meta">${safe(groups(card).join(' · ') || 'Collab card')}</span>${affectedAssetLine(card)}<span class="effect">${effect(card, effects.get(id) || { regular: Number(card.Value) * 3 * multiplier, conditional: Number(card.ConditionalValue) * 3 * multiplier }, isFoil)}</span></span></div>`;
+    const settledEffect = effects.get(id) || { regular: Number(card.Value) * 3 * multiplier, conditional: Number(card.ConditionalValue) * 3 * multiplier };
+    return `<div class="slot filled" data-slot="${index}" role="group" aria-label="${safe(card.Name)}, slot ${position}${hasOwnedCardData ? copies ? `, owned ${copies}` : ', not owned' : ''}"><span class="board-card${isFoil ? ' foil-card' : ''}"><span class="card-top"><span class="card-tier">TIER ${tierNames[card.Tier]}</span><span class="board-card-tools">${ownershipBadge}<span class="card-id">#${String(card.ID).padStart(3, '0')}</span><label class="foil-control" data-foil-control title="${isFoil ? 'Foil effect values are doubled' : 'Mark this card as foil'}"><input type="checkbox" data-foil="${card.ID}" ${isFoil ? 'checked' : ''} aria-label="Mark ${safe(card.Name)} as foil"><span>FOIL ×2</span></label><button class="remove-card" data-remove-slot="${index}" aria-label="Remove ${safe(card.Name)}">×</button></span></span><span class="card-name">${safe(card.Name)}</span><span class="card-meta">${safe(groups(card).join(' · ') || 'Collab card')}</span>${affectedAssetLine(card)}${secondaryAssetCalculation(card, settledEffect.regular)}<span class="effect">${effect(card, settledEffect, isFoil)}</span></span></div>`;
   }).join('');
   document.querySelector('#placed-count').textContent = placements.filter(id => id !== null).length;
 }
@@ -1003,7 +1037,8 @@ function renderCollection() {
     const isPlaced = placed.has(card.ID);
     const copies = ownedCardCounts.get(card.ID) || 0;
     const ownershipBadge = hasOwnedCardData ? `<span class="ownership-badge ${copies ? 'owned' : 'unowned'}">${copies ? `OWNED ×${copies}` : 'NOT OWNED'}</span>` : '';
-    return `<button class="card${foilIds.has(card.ID) ? ' foil-card' : ''}${isPlaced ? ' placed' : ''}${selectedId === card.ID ? ' selected' : ''}" data-card="${card.ID}" ${isPlaced ? 'disabled' : ''} aria-label="${safe(card.Name)}, tier ${card.Tier}${hasOwnedCardData ? copies ? `, owned ${copies}` : ', not owned' : ''}${foilIds.has(card.ID) ? ', foil' : ''}${isPlaced ? ', placed' : ''}"><span class="card-top"><span class="card-tier">TIER ${tierNames[card.Tier]}</span><span class="collection-card-tools">${ownershipBadge}${foilIds.has(card.ID) ? '<span class="foil-badge">FOIL ×2</span>' : ''}<span class="card-id">#${String(card.ID).padStart(3, '0')}</span></span></span><span class="card-name">${safe(card.Name)}</span><span class="card-meta">${safe(groups(card).join(' · ') || 'Collab card')}</span>${affectedAssetLine(card)}<span class="effect">${effect(card, null, foilIds.has(card.ID))}</span></button>`;
+    const standaloneEffect = Number(card.Value) * 3 * (foilIds.has(card.ID) ? 2 : 1) * holoscopeEffectScale(card, card.EquipOperation);
+    return `<button class="card${foilIds.has(card.ID) ? ' foil-card' : ''}${isPlaced ? ' placed' : ''}${selectedId === card.ID ? ' selected' : ''}" data-card="${card.ID}" ${isPlaced ? 'disabled' : ''} aria-label="${safe(card.Name)}, tier ${card.Tier}${hasOwnedCardData ? copies ? `, owned ${copies}` : ', not owned' : ''}${foilIds.has(card.ID) ? ', foil' : ''}${isPlaced ? ', placed' : ''}"><span class="card-top"><span class="card-tier">TIER ${tierNames[card.Tier]}</span><span class="collection-card-tools">${ownershipBadge}${foilIds.has(card.ID) ? '<span class="foil-badge">FOIL ×2</span>' : ''}<span class="card-id">#${String(card.ID).padStart(3, '0')}</span></span></span><span class="card-name">${safe(card.Name)}</span><span class="card-meta">${safe(groups(card).join(' · ') || 'Collab card')}</span>${affectedAssetLine(card)}${secondaryAssetCalculation(card, standaloneEffect)}<span class="effect">${effect(card, { regular: standaloneEffect, conditional: Number(card.ConditionalValue) * 3 * (foilIds.has(card.ID) ? 2 : 1) * holoscopeEffectScale(card, card.ConditionalOperation) }, foilIds.has(card.ID))}</span></button>`;
   }).join('');
   document.querySelector('#empty-state').hidden = visible.length > 0;
   ownedFilter.disabled = !hasOwnedCardData;
@@ -1242,7 +1277,12 @@ optimizeOwnedButton.addEventListener('click', async () => {
     saveAndRender();
     const target = result.target ? ` Target: ${result.target.name}, current baseline ${formatLargeNumber(result.target.contribution)} IpS.` : ' Objective: total added IpS across all owned assets.';
     const fallback = result.usedOverallFallback ? ' No eligible layout improved that asset, so this is the best overall positive layout instead.' : '';
-    ownedSearchStatus.textContent = `Best layout found from ${result.candidateCount} eligible owned cards · ${result.limits.slots.length} unlocked slots · through tier ${tierNames[result.limits.tier]} · estimated added IpS ${formatLargeNumber(result.score)}.${target}${fallback} This is a heuristic search.`;
+    const occupancy = result.cardCount === result.limits.slots.length
+      ? `Filled all ${result.cardCount} unlocked slots.`
+      : result.candidateCount < result.limits.slots.length
+        ? `Filled all ${result.cardCount} eligible cards across ${result.limits.slots.length} unlocked slots.`
+        : `Filled ${result.cardCount} of ${result.limits.slots.length} unlocked slots; no loop-free layout with more eligible cards was found.`;
+    ownedSearchStatus.textContent = `Best layout found from ${result.candidateCount} eligible owned cards · ${occupancy} · through tier ${tierNames[result.limits.tier]} · estimated added IpS ${formatLargeNumber(result.score)}.${target}${fallback} This is a heuristic search.`;
   } catch (error) {
     ownedSearchStatus.textContent = `Layout search failed: ${error.message || 'unexpected error'}`;
   } finally {

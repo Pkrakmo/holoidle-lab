@@ -28,6 +28,36 @@ function fallbackLayoutSave() {
   return save;
 }
 
+function eightSlotLayoutSave() {
+  const save = ownedLayoutSave();
+  save.assetsOwned.forEach(asset => { asset.owned = 1; });
+  // Eight distinct Tier I cards with no directional links. Save card IDs are
+  // one-based while the catalog IDs used by the board are zero-based.
+  save.collabsOwned = [5, 8, 9, 12, 13, 16, 18, 19];
+  save.unlocksOwned = [15, 16, 17, 18].map(id => ({ id, purchased: true, owned: 1 }));
+  return save;
+}
+
+function secondaryAssetSave() {
+  const assetsOwned = Array.from({ length: 21 }, (_, id) => ({ id, owned: 0, assetUpgradesOwned: [] }));
+  assetsOwned[2].owned = 23; // Artist, the source for Bau Bau.
+  assetsOwned[4].owned = 11; // Coffee, the source for Smol Raora.
+  assetsOwned[18].owned = 1; // Space Colony, Bau Bau's target.
+  return {
+    assetsOwned,
+    collabsOwned: [95], // Bau Bau is CSV ID 94, while saves are one-based.
+    collabsEquipped: [{ collabID: 95, slotIndex: 0 }],
+    unlocksOwned: [],
+    collabPower: 1,
+    rebirthCount: 1,
+    happinessPercentage: 0,
+    negativeHapppinessTrollPercentage: 0,
+    minimumHappinessPercentage: -100,
+    holoscopePower: 0,
+    stars: []
+  };
+}
+
 test('owned layout search respects unlocked slots and tier cap while maximizing total added IpS', async ({ page }) => {
   await page.goto('/');
   await page.locator('#save-file').setInputFiles({
@@ -47,6 +77,38 @@ test('owned layout search respects unlocked slots and tier cap while maximizing 
   expect(tiers.every(tier => tier.trim() === 'TIER I')).toBeTruthy();
   await expect(page.locator('.slot.filled .card-name')).toContainText('Boxing Gloves');
   await expect(page.locator('[data-asset-name="Talent Agency"]')).toContainText('Cards +330 million');
+});
+
+test('owned layout search fills every unlocked slot when enough eligible cards are available', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#save-file').setInputFiles({
+    name: 'eight-slots.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(eightSlotLayoutSave()))
+  });
+
+  await page.locator('#optimize-owned').click();
+  await expect(page.locator('#owned-search-status')).toContainText('Filled all 8 unlocked slots.');
+
+  const slots = await page.locator('.slot.filled').evaluateAll(elements => elements.map(element => Number(element.dataset.slot)).sort((a, b) => a - b));
+  expect(slots).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  const cards = await page.locator('.slot.filled .card-id').allTextContents();
+  expect(new Set(cards).size).toBe(8);
+});
+
+test('secondary-asset cards show imported group-of-ten bonuses in the collection and on the board', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('[data-card="94"] .secondary-asset-calculation')).toHaveCount(0);
+  await page.locator('#save-file').setInputFiles({
+    name: 'secondary-assets.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(secondaryAssetSave()))
+  });
+
+  const bauBauCalculation = 'Artist: 23 owned → 2 × +150% = +300% Space Colony';
+  await expect(page.locator('[data-card="94"] .secondary-asset-calculation')).toHaveText(bauBauCalculation);
+  await expect(page.locator('.slot.filled .secondary-asset-calculation')).toHaveText(bauBauCalculation);
+  await expect(page.locator('[data-card="108"] .secondary-asset-calculation')).toHaveText('Coffee: 11 owned → 1 × +60% = +60% Chain');
 });
 
 test('navigation and board fit a narrow phone viewport', async ({ page }) => {

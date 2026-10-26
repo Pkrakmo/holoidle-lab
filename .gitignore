@@ -7,7 +7,7 @@ npm-debug.log*
 # Research
 docs/*
 docs/research/*
-agent.md
+AGENTS.md
 
 # Local environment and editor files
 .env
